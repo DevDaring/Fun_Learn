@@ -1,0 +1,107 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.venv/
+venv/
+ENV/
+env/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.nuxt/
+
+# IDE and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Coverage and testing
+coverage/
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+.nox/
+
+# Media/uploads (keep structure but ignore content)
+genlearn-ai/backend/media/avatars/*.png
+genlearn-ai/backend/media/avatars/*.jpg
+genlearn-ai/backend/media/characters/*.png
+genlearn-ai/backend/media/characters/*.jpg
+genlearn-ai/backend/media/audio/*.mp3
+genlearn-ai/backend/media/audio/*.wav
+!genlearn-ai/backend/media/.gitkeep
+!genlearn-ai/backend/media/*/.gitkeep
+
+# Data files (CSVs with user data)
+genlearn-ai/backend/data/*.csv
+!genlearn-ai/backend/data/.gitkeep
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+tmp/
+temp/
+
+# Credentials and secrets
+*.pem
+*.key
+credentials.json
+service-account*.json

@@ -1,4 +1,4 @@
-# GenLearn AI - Complete Prototype
+# Fun Learn - Complete Prototype
 
 **A Generative AI-Enabled Adaptive Learning System**
 
@@ -6,7 +6,7 @@ Full-stack application with React + TypeScript frontend and Python FastAPI backe
 
 ## 🎯 Project Overview
 
-GenLearn AI is an intelligent learning platform that uses AI to:
+Fun Learn is an intelligent learning platform that uses AI to:
 - Generate personalized learning content with storytelling
 - Create visual learning materials (images and videos)
 - Evaluate student answers with detailed feedback
@@ -103,7 +103,7 @@ Create a `.env` file in the `backend/` directory with the following variables:
 
 ```env
 # App Settings
-APP_NAME=GenLearn AI
+APP_NAME=Fun Learn
 APP_ENV=development
 DEBUG=true
 SECRET_KEY=your_secret_key_change_in_production
@@ -145,42 +145,85 @@ The application comes with pre-configured test users:
 | Role  | Username      | Password     |
 |-------|---------------|--------------|
 | Admin | admin         | password123  |
-| User  | john_doe      | password123  |
+| User  | DebK          | password123  |
 | User  | priya_sharma  | password123  |
 | User  | amit_roy      | password123  |
 | User  | sarah_wilson  | password123  |
 
 ## ✨ Features
 
-### Core Learning Features
-- ✅ **Adaptive Content Generation** - AI generates personalized learning content
-- ✅ **Story-Based Learning** - Engaging narratives with visual elements
-- ✅ **3-Image Carousel** - Visual learning with facts and narratives
-- ✅ **AI-Generated Images** - Custom images for each learning segment
+### 🚀 Enhanced AI Features (NEW!)
+
+These eight innovative AI-powered features transform traditional learning into an interactive, personalized experience:
+
+| Feature | Description |
+|---------|-------------|
+| 📸 **Learn from Anything** | Upload any image (textbook, street sign, menu, nature photo) and AI discovers 4-6 learning opportunities across multiple subjects like Physics, History, Math, and Art |
+| 🎓 **Reverse Classroom** | Become the teacher! Explain concepts to an AI "student" who asks clarifying questions. Build deep understanding by teaching |
+| ⏰ **Time Travel Interview** | Chat with historical figures (Gandhi, Einstein, Curie, Da Vinci). Ask questions and receive historically-informed responses |
+| 🔗 **Concept Collision** | Discover surprising connections between topics you've learned. See how seemingly unrelated subjects connect |
+| 🔬 **Mistake Autopsy + MCT** | Two analysis modes: Quick Autopsy for instant error analysis, or Deep MCT Session with Socratic probing to trace errors to root misconceptions |
+| 📺 **YouTube to Course** | Paste a video transcript, AI generates a structured course with chapters, summaries, quizzes, and learning objectives |
+| ⚔️ **Debate Arena** | Take any position on a topic. AI argues the opposite side, helping develop critical thinking and argumentation skills |
+| 🎯 **Dream Project Path** | Describe your dream project (app, robot, art piece). AI creates a personalized learning roadmap with milestones |
+
+#### 🔬 Misconception Cascade Tracing (MCT) - Deep Dive
+
+The MCT feature uses a 5-phase Socratic diagnostic approach:
+
+1. **Surface Capture** - Identify the visible error
+2. **Diagnostic Probing** - Ask targeted questions to trace the error chain
+3. **Root Found** - Identify the fundamental misconception
+4. **Remediation** - Provide targeted repair of the broken concept
+5. **Verification** - Confirm understanding through follow-up questions
+
+MCT tracks the "cascade path" showing how one misconception leads to multiple errors, enabling targeted learning repair.
+
+---
+
+### 📚 Core Learning Features
+
+- ✅ **Adaptive Content Generation** - AI generates personalized learning content based on your level
+- ✅ **Story-Based Learning** - Engaging narratives with visual elements that make learning memorable
+- ✅ **6 Story Styles** - Choose from Thriller 🔪, Fun 🎉, Nostalgic 📼, Adventure 🗺️, Mystery 🔍, Sci-Fi 🚀
+- ✅ **Interactive Quizzes** - Questions after each story segment with instant feedback and explanations
+- ✅ **Points & Streaks** - Gamified scoring with streak bonuses to keep you motivated
+- ✅ **Session History** - Review past learning sessions anytime
+- ✅ **Revision Mode** - Revisit stored content with quizzes and explanations
+- ✅ **3-Image Carousel** - Visual learning with facts and narratives on each card
+- ✅ **AI-Generated Images** - Custom scenes for each learning segment (optimized for visual clarity)
+- ✅ **Text Overlays** - Frontend-rendered text on images (caption, speech bubble, dramatic styles)
 - ✅ **Video Generation** - 8-second educational videos from images
 - ✅ **MCQ Questions** - Auto-generated multiple choice questions
 - ✅ **Descriptive Questions** - Open-ended questions with AI evaluation
 - ✅ **Adaptive Difficulty** - Content scales based on difficulty level (1-10)
 
-### Avatar & Characters
-- ✅ **Avatar Creation** - Draw, upload, or choose from gallery
-- ✅ **Character System** - Add custom characters to stories
-- ✅ **Style Options** - Cartoon or realistic visual styles
+### � Avatar & Characters
 
-### Voice Features
+- ✅ **Avatar Creation** - Draw, upload, or choose from gallery
+- ✅ **Character Creation** - Draw or upload images for character generation
+- ✅ **Character Integration** - Characters appear in learning stories
+- ✅ **Multi-Character Support** - Select up to 3 characters per session
+- ✅ **Style Options** - Cartoon or realistic visual styles
+- ✅ **Full-Body Characters** - AI generates complete characters with backgrounds
+
+### 🔊 Voice Features
+
 - ✅ **Text-to-Speech** - Narration for all content
 - ✅ **Speech-to-Text** - Voice input for answers
 - ✅ **Full Vocal Mode** - Complete hands-free operation
-- ✅ **Multi-Language** - Support for 8+ languages
+- ✅ **Multi-Language** - Support for 8+ languages (English, Hindi, Spanish, French, German, Japanese, Korean, Chinese)
 
-### Gamification
-- ✅ **XP & Leveling System** - Progress tracking
-- ✅ **Streak Tracking** - Daily learning streaks
+### 🏆 Gamification
+
+- ✅ **XP & Leveling System** - Progress tracking with level-ups
+- ✅ **Streak Tracking** - Daily learning streaks with bonus XP
 - ✅ **Teams** - Create and join learning teams
-- ✅ **Tournaments** - Competitive learning events
+- ✅ **Tournaments** - Competitive learning events with prizes
 - ✅ **Leaderboards** - Global and tournament rankings
 
-### Admin Features
+### 👑 Admin Features
+
 - ✅ **Tournament Management** - Create and manage tournaments
 - ✅ **Question Upload** - Bulk upload via CSV
 - ✅ **User Management** - View and manage users
@@ -212,7 +255,8 @@ VOICE_STT_PROVIDER=gcp  # or: azure
 The application uses CSV files for data storage:
 
 - **users.csv** - User accounts and profiles
-- **sessions.csv** - Learning sessions
+- **sessions.csv** - Learning sessions with story_style, avatar/character IDs
+- **session_content.csv** - Stored story segments with quizzes for revision
 - **scores.csv** - Quiz scores and results
 - **questions_mcq.csv** - Multiple choice questions
 - **questions_descriptive.csv** - Descriptive questions
@@ -292,22 +336,23 @@ npm run build  # Verify build succeeds
 
 1. **User logs in** with credentials (john_doe / password123)
 2. **Configures course**:
-   - Topic: "Photosynthesis"
+   - Topic: "World War 2"
    - Difficulty: 5
-   - Duration: 15 minutes
+   - Duration: 10 minutes
+   - Story Style: Adventure 🗺️
    - Visual Style: Cartoon
-   - Play Mode: Solo
+   - Select Avatar and Characters
 3. **Views learning content**:
-   - 3 AI-generated images with narratives
-   - Facts about photosynthesis
-   - Audio narration
-4. **Watches video**: 8-second educational video
-5. **Takes quiz**:
-   - 3 MCQ questions
-   - 3 descriptive questions
-6. **Receives feedback**: AI evaluates answers with detailed feedback
-7. **Earns XP**: Gains experience points and levels up
-8. **Views leaderboard**: Compares score with others
+   - AI-generated story scenes with text overlays
+   - Narrative with character integration
+   - Audio narration (optional)
+4. **Takes interactive quiz**: After each story segment
+   - 4-option multiple choice
+   - Instant feedback with explanations
+   - Points and streak tracking
+5. **Views results summary**: Score, XP earned, accuracy, streak
+6. **Revises later**: Access History page to review past sessions
+7. **Compares on leaderboard**: Rankings with others
 
 ## 🚀 Production Deployment
 
@@ -365,5 +410,5 @@ For issues or questions, please refer to:
 
 **Made with ❤️ for adaptive learning**
 
-Last Updated: December 2024
-Version: 1.0.0-prototype
+Last Updated: January 2026
+Version: 2.0.0 - Enhanced Learning Experience

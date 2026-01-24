@@ -62,7 +62,10 @@ async def start_learning_session(
             "difficulty_level": session_config.difficulty_level,
             "duration_minutes": session_config.duration_minutes,
             "visual_style": session_config.visual_style,
+            "story_style": session_config.story_style,
             "play_mode": session_config.play_mode,
+            "avatar_id": session_config.avatar_id or "",
+            "character_ids": ",".join(session_config.character_ids) if session_config.character_ids else "",
             "team_id": session_config.team_id or "",
             "tournament_id": session_config.tournament_id or "",
             "status": "in_progress",
@@ -76,7 +79,13 @@ async def start_learning_session(
         # Save session to database
         csv_handler.create("sessions", session_data)
 
-        return session_data
+        # Return properly formatted response (convert for Pydantic model)
+        response_data = {
+            **session_data,
+            "character_ids": session_config.character_ids or [],  # Return as list
+            "completed_at": None  # Not completed yet
+        }
+        return response_data
 
     except HTTPException:
         raise
@@ -89,7 +98,7 @@ async def start_learning_session(
         )
 
 
-@router.get("/session/{session_id}/content", response_model=SessionContent, status_code=status.HTTP_200_OK)
+@router.get("/session/{session_id}/content", status_code=status.HTTP_200_OK)
 async def get_session_content(
     session_id: str,
     current_user: dict = Depends(get_current_user)
@@ -124,23 +133,32 @@ async def get_session_content(
                 detail="Access denied to this session"
             )
 
-        # Get user's avatar and characters if available
+        # Get avatar and character info from session (stored during creation)
         avatar_description = None
-        if current_user.get("avatar_id"):
-            avatar = csv_handler.read_by_id("avatars", current_user["avatar_id"], "avatar_id")
+        if session.get("avatar_id"):
+            avatar = csv_handler.read_by_id("avatars", session["avatar_id"], "avatar_id")
             if avatar:
                 avatar_description = avatar.get("name", "")
 
         character_descriptions = []
-        characters = csv_handler.read_all("characters")
-        user_characters = [c for c in characters if c.get("user_id") == current_user["user_id"]]
-        character_descriptions = [c.get("description", c.get("name", "")) for c in user_characters[:3]]
+        if session.get("character_ids"):
+            char_ids = session["character_ids"].split(",") if isinstance(session["character_ids"], str) else session["character_ids"]
+            for char_id in char_ids:
+                if char_id:
+                    character = csv_handler.read_by_id("characters", char_id.strip(), "character_id")
+                    if character:
+                        char_desc = f"{character.get('name', 'Character')} - {character.get('description', '')}"
+                        character_descriptions.append(char_desc)
 
-        # Generate content
+        # Get story_style from session (default to "fun" if not set)
+        story_style = session.get("story_style", "fun")
+
+        # Generate content with story style
         content = await content_generator.generate_learning_content(
             topic=session["topic"],
             difficulty_level=session["difficulty_level"],
             visual_style=session["visual_style"],
+            story_style=story_style,
             num_segments=session["total_cycles"],
             avatar_description=avatar_description,
             character_descriptions=character_descriptions if character_descriptions else None
@@ -149,9 +167,10 @@ async def get_session_content(
         # Save images and create URLs
         story_segments = []
         for idx, segment in enumerate(content["story_segments"]):
-            # Generate image
+            # Generate image using scene_description (not image_prompt - no text in image)
+            image_prompt = segment.get("scene_description") or segment.get("image_prompt", f"Scene for {session['topic']}")
             image_data = await content_generator.generate_image(
-                prompt=segment["image_prompt"],
+                prompt=image_prompt,
                 style=session["visual_style"]
             )
 
@@ -176,19 +195,58 @@ async def get_session_content(
             }
             csv_handler.create("learning_history", history_data)
 
-            # Create story segment with image URL
+            # Create enhanced story segment with image URL, text overlay, and quiz
             story_segments.append({
-                "segment_number": segment["segment_number"],
-                "narrative": segment["narrative"],
-                "facts": segment["facts"],
-                "image_prompt": segment["image_prompt"],
-                "image_url": f"/media/{image_path}",
-                "audio_url": None  # Will be generated on demand
+                "segment_number": segment.get("segment_number", idx + 1),
+                "narrative": segment.get("narrative", ""),
+                "scene_description": segment.get("scene_description", segment.get("image_prompt", "")),
+                "scene_image_url": f"/media/{image_path}",
+                "text_overlay": segment.get("text_overlay", {
+                    "text": "",
+                    "position": "bottom",
+                    "style": "caption"
+                }),
+                "audio_url": None,  # Will be generated on demand
+                "quiz": segment.get("quiz", {
+                    "question_id": f"Q{idx + 1}",
+                    "question_text": f"What did you learn about {session['topic']}?",
+                    "options": [
+                        {"key": "A", "text": "Option A"},
+                        {"key": "B", "text": "Option B"},
+                        {"key": "C", "text": "Option C"},
+                        {"key": "D", "text": "Option D"}
+                    ],
+                    "correct_answers": ["A"],
+                    "explanation": "This is the explanation.",
+                    "is_multi_select": False,
+                    "points": 10
+                })
             })
+
+        # Save session content to CSV for revision/history
+        import json
+        for seg in story_segments:
+            content_data = {
+                "content_id": generate_unique_id("CON"),
+                "session_id": session_id,
+                "user_id": current_user["user_id"],
+                "segment_number": seg["segment_number"],
+                "narrative": seg["narrative"],
+                "scene_description": seg.get("scene_description", ""),
+                "scene_image_url": seg["scene_image_url"],
+                "text_overlay": json.dumps(seg.get("text_overlay", {})),
+                "quiz_question": seg["quiz"].get("question_text", "") if seg.get("quiz") else "",
+                "quiz_options": json.dumps(seg["quiz"].get("options", [])) if seg.get("quiz") else "[]",
+                "quiz_correct_answers": json.dumps(seg["quiz"].get("correct_answers", [])) if seg.get("quiz") else "[]",
+                "quiz_explanation": seg["quiz"].get("explanation", "") if seg.get("quiz") else "",
+                "created_at": datetime.now().isoformat()
+            }
+            csv_handler.create("session_content", content_data)
 
         return {
             "session_id": session_id,
             "topic": session["topic"],
+            "story_style": session.get("story_style", "fun"),
             "story_segments": story_segments,
             "topic_summary": content.get("topic_summary", ""),
             "total_cycles": session["total_cycles"]
@@ -341,4 +399,155 @@ async def end_learning_session(
             "ending learning session",
             public_message=ErrorMessages.SESSION_ERROR,
             log_context={"session_id": session_id}
+        )
+
+
+@router.get("/history", status_code=status.HTTP_200_OK)
+async def get_session_history(
+    current_user: dict = Depends(get_current_user),
+    limit: int = 20,
+    offset: int = 0
+):
+    """
+    Get user's learning session history for revision
+
+    Returns list of past sessions with basic info
+    """
+    try:
+        csv_handler = CSVHandler()
+        
+        # Get all sessions for user
+        all_sessions = csv_handler.read_all("sessions")
+        user_sessions = [s for s in all_sessions if s.get("user_id") == current_user["user_id"]]
+        
+        # Sort by started_at (most recent first)
+        user_sessions.sort(key=lambda x: x.get("started_at", ""), reverse=True)
+        
+        # Paginate
+        paginated = user_sessions[offset:offset + limit]
+        
+        # Format response
+        history = []
+        for session in paginated:
+            history.append({
+                "session_id": session["session_id"],
+                "topic": session["topic"],
+                "difficulty_level": int(session.get("difficulty_level", 5)),
+                "duration_minutes": int(session.get("duration_minutes", 10)),
+                "story_style": session.get("story_style", "fun"),
+                "visual_style": session.get("visual_style", "cartoon"),
+                "score": int(session.get("score", 0)),
+                "status": session.get("status", "unknown"),
+                "started_at": session.get("started_at", ""),
+                "completed_at": session.get("completed_at", "")
+            })
+        
+        return {
+            "sessions": history,
+            "total": len(user_sessions),
+            "limit": limit,
+            "offset": offset
+        }
+    
+    except Exception as e:
+        raise handle_error(
+            e,
+            "fetching session history",
+            public_message="Failed to load history"
+        )
+
+
+@router.get("/history/{session_id}", status_code=status.HTTP_200_OK)
+async def get_session_revision(
+    session_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get complete session content for revision
+
+    Returns session with all story segments and quizzes
+    """
+    import json
+    
+    try:
+        csv_handler = CSVHandler()
+        
+        # Get session
+        session = csv_handler.read_by_id("sessions", session_id, "session_id")
+        if not session:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Session not found"
+            )
+        
+        # Verify ownership
+        if session.get("user_id") != current_user["user_id"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied"
+            )
+        
+        # Get session content
+        all_content = csv_handler.read_all("session_content")
+        session_content = [c for c in all_content if c.get("session_id") == session_id]
+        session_content.sort(key=lambda x: int(x.get("segment_number", 0)))
+        
+        # Build story segments from stored content
+        story_segments = []
+        for content in session_content:
+            try:
+                text_overlay = json.loads(content.get("text_overlay", "{}"))
+            except:
+                text_overlay = {"text": "", "position": "bottom", "style": "caption"}
+            
+            try:
+                options = json.loads(content.get("quiz_options", "[]"))
+            except:
+                options = []
+            
+            try:
+                correct_answers = json.loads(content.get("quiz_correct_answers", "[]"))
+            except:
+                correct_answers = []
+            
+            story_segments.append({
+                "segment_number": int(content.get("segment_number", 1)),
+                "narrative": content.get("narrative", ""),
+                "scene_description": content.get("scene_description", ""),
+                "scene_image_url": content.get("scene_image_url", ""),
+                "text_overlay": text_overlay,
+                "audio_url": None,
+                "quiz": {
+                    "question_id": f"Q{content.get('segment_number', 1)}",
+                    "question_text": content.get("quiz_question", ""),
+                    "options": options,
+                    "correct_answers": correct_answers,
+                    "explanation": content.get("quiz_explanation", ""),
+                    "is_multi_select": False,
+                    "points": 10
+                }
+            })
+        
+        return {
+            "session_id": session_id,
+            "topic": session["topic"],
+            "difficulty_level": int(session.get("difficulty_level", 5)),
+            "duration_minutes": int(session.get("duration_minutes", 10)),
+            "story_style": session.get("story_style", "fun"),
+            "visual_style": session.get("visual_style", "cartoon"),
+            "score": int(session.get("score", 0)),
+            "status": session.get("status", "unknown"),
+            "started_at": session.get("started_at", ""),
+            "completed_at": session.get("completed_at", ""),
+            "story_segments": story_segments,
+            "total_segments": len(story_segments)
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise handle_error(
+            e,
+            "fetching session revision",
+            public_message="Failed to load session content"
         )

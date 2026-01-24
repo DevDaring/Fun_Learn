@@ -1,5 +1,5 @@
 """
-Services package - Business logic services for GenLearn AI
+Services package - Business logic services for Fun Learn
 """
 
 from .content_generator import ContentGenerator

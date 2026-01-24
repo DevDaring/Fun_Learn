@@ -1,8 +1,8 @@
-# GenLearn AI Provider System
+# Fun Learn Provider System
 
 ## Overview
 
-This document describes the complete provider system for GenLearn AI backend. All provider interfaces and implementations have been created according to the specifications in `genlearn-ai-prompt.md`.
+This document describes the complete provider system for Fun Learn backend. All provider interfaces and implementations have been created according to the specifications in `genlearn-ai-prompt.md`.
 
 ## Architecture
 
@@ -220,7 +220,7 @@ image_bytes = await image.generate_image(request)
 
 ```python
 audio_bytes = await tts.synthesize_speech(
-    text="Welcome to GenLearn AI!",
+    text="Welcome to Fun Learn!",
     language="en",
     voice_type="female",
     speed=1.0

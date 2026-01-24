@@ -1,8 +1,8 @@
 @echo off
-REM GenLearn AI Backend - Quick Start Script for Windows
+REM Fun Learn Backend - Quick Start Script for Windows
 
 echo ============================================================
-echo GenLearn AI Backend - Quick Start
+echo Fun Learn Backend - Quick Start
 echo ============================================================
 echo.
 
@@ -46,7 +46,7 @@ if not exist ".env" (
 REM Start server
 echo.
 echo ============================================================
-echo Starting GenLearn AI Backend Server...
+echo Starting Fun Learn Backend Server...
 echo ============================================================
 echo.
 python run.py --reload

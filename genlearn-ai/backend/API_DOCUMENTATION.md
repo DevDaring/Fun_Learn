@@ -1,6 +1,6 @@
-# GenLearn AI - API Documentation
+# Fun Learn - API Documentation
 
-Complete API reference for the GenLearn AI backend system.
+Complete API reference for the Fun Learn backend system.
 
 ## Base URL
 
@@ -545,7 +545,7 @@ Convert text to speech.
 **Request Body:**
 ```json
 {
-  "text": "Hello, welcome to GenLearn AI",
+  "text": "Hello, welcome to Fun Learn",
   "language": "en",
   "voice_type": "female",
   "speed": 1.0

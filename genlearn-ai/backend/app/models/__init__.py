@@ -1,5 +1,5 @@
 """
-Models package - Pydantic models for GenLearn AI
+Models package - Pydantic models for Fun Learn
 """
 
 from .user import (

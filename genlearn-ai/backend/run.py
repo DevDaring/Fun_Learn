@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-GenLearn AI - Development Server Runner
+Fun Learn - Development Server Runner
 
 This script provides an easy way to run the FastAPI server with proper configuration.
 """
@@ -69,7 +69,7 @@ def check_directories():
 
 def main():
     """Main entry point"""
-    parser = argparse.ArgumentParser(description="Run GenLearn AI Backend Server")
+    parser = argparse.ArgumentParser(description="Run Fun Learn Backend Server")
     parser.add_argument(
         "--host",
         default="0.0.0.0",
@@ -113,7 +113,7 @@ def main():
 
     # Start server
     print("\n" + "=" * 60)
-    print("🚀 Starting GenLearn AI Backend Server")
+    print("🚀 Starting Fun Learn Backend Server")
     print("=" * 60)
     print(f"📍 Host: {args.host}")
     print(f"📍 Port: {args.port}")

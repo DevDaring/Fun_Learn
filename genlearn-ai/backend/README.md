@@ -1,6 +1,6 @@
-# GenLearn AI - Backend
+# Fun Learn - Backend
 
-Production-ready FastAPI backend for the GenLearn AI adaptive learning system.
+Production-ready FastAPI backend for the Fun Learn adaptive learning system.
 
 ## Features
 
@@ -334,7 +334,7 @@ cat .env | grep API_KEY
 
 ## License
 
-This project is part of the GenLearn AI prototype system.
+This project is part of the Fun Learn prototype system.
 
 ## Support
 

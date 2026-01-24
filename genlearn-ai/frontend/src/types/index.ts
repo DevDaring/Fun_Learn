@@ -1,5 +1,5 @@
 /**
- * TypeScript type definitions for GenLearn AI
+ * TypeScript type definitions for Fun Learn
  */
 
 // ============================================================
@@ -37,7 +37,10 @@ export interface CourseConfig {
   difficulty_level: number;
   duration_minutes: number;
   visual_style: 'cartoon' | 'realistic';
+  story_style: 'thriller' | 'fun' | 'nostalgic' | 'adventure' | 'mystery' | 'scifi';
   play_mode: 'solo' | 'team' | 'tournament';
+  avatar_id?: string;
+  character_ids?: string[];
   team_id?: string;
   tournament_id?: string;
 }

@@ -146,9 +146,55 @@ export const debounce = <T extends (...args: any[]) => any>(
   };
 };
 
-/**
- * Class name helper
- */
 export const cn = (...classes: (string | boolean | undefined)[]): string => {
   return classes.filter(Boolean).join(' ');
+};
+
+/**
+ * Format chat content with proper markdown rendering
+ * Handles: bold, italic, bullet points, numbered lists, LaTeX math, code blocks
+ */
+export const formatChatContent = (content: string): string => {
+  let formatted = content
+    // Escape HTML to prevent XSS
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+
+    // Code blocks (```)
+    .replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre class="bg-gray-800 text-green-400 p-3 rounded-lg my-2 overflow-x-auto text-sm"><code>$2</code></pre>')
+
+    // Inline code (`)
+    .replace(/`([^`]+)`/g, '<code class="bg-gray-200 text-red-600 px-1 rounded text-sm">$1</code>')
+
+    // LaTeX math - inline $...$ -> styled span
+    .replace(/\$([^$]+)\$/g, '<span class="font-mono text-blue-600 bg-blue-50 px-1 rounded">$1</span>')
+
+    // Bold **text**
+    .replace(/\*\*([^*]+)\*\*/g, '<strong class="font-semibold">$1</strong>')
+
+    // Italic *text* (but not bullet points at line start)
+    .replace(/(?<!^|\n)\*([^*\n]+)\*/g, '<em>$1</em>')
+
+    // Bullet points: * at start of line
+    .replace(/^[\*\-]\s+(.+)$/gm, '<li class="ml-4 list-disc">$1</li>')
+
+    // Numbered lists: 1. at start of line
+    .replace(/^\d+\.\s+(.+)$/gm, '<li class="ml-4 list-decimal">$1</li>')
+
+    // Wrap consecutive list items in ul/ol
+    .replace(/((?:<li class="ml-4 list-disc">.*<\/li>\n?)+)/g, '<ul class="my-2 space-y-1">$1</ul>')
+    .replace(/((?:<li class="ml-4 list-decimal">.*<\/li>\n?)+)/g, '<ol class="my-2 space-y-1">$1</ol>')
+
+    // Headers (### Header)
+    .replace(/^###\s+(.+)$/gm, '<h3 class="font-bold text-lg mt-3 mb-1">$1</h3>')
+    .replace(/^##\s+(.+)$/gm, '<h2 class="font-bold text-xl mt-4 mb-2">$1</h2>')
+    .replace(/^#\s+(.+)$/gm, '<h1 class="font-bold text-2xl mt-4 mb-2">$1</h1>')
+
+    // Line breaks
+    .replace(/\n\n/g, '</p><p class="mb-2">')
+    .replace(/\n/g, '<br/>');
+
+  // Wrap in paragraph
+  return '<p class="mb-2">' + formatted + '</p>';
 };

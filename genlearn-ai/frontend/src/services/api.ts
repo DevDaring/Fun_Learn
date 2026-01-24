@@ -11,7 +11,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000
 const API_KEY = 'kd_dreaming007'; // Application API key
 
 class ApiService {
-  private client: AxiosInstance;
+  public client: AxiosInstance;
 
   constructor() {
     this.client = axios.create({
@@ -75,7 +75,10 @@ class ApiService {
     difficulty_level: number;
     duration_minutes: number;
     visual_style: 'cartoon' | 'realistic';
+    story_style?: string;
     play_mode: 'solo' | 'team' | 'tournament';
+    avatar_id?: string;
+    character_ids?: string[];
     team_id?: string;
     tournament_id?: string;
   }) {
@@ -99,6 +102,16 @@ class ApiService {
       total_time_seconds: totalTimeSeconds,
       completed,
     });
+    return response.data;
+  }
+
+  async getSessionHistory(limit: number = 20, offset: number = 0) {
+    const response = await this.client.get(`/learning/history?limit=${limit}&offset=${offset}`);
+    return response.data;
+  }
+
+  async getSessionRevision(sessionId: string) {
+    const response = await this.client.get(`/learning/history/${sessionId}`);
     return response.data;
   }
 

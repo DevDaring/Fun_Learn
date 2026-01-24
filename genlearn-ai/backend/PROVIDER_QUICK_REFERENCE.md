@@ -98,7 +98,7 @@ character_bytes = await image.stylize_character(
 ```python
 # Text-to-Speech
 audio_bytes = await tts.synthesize_speech(
-    text="Welcome to GenLearn!",
+    text="Welcome to Fun Learn!",
     language="en",
     voice_type="female",
     speed=1.0

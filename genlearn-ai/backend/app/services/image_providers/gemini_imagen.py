@@ -65,12 +65,14 @@ class GeminiImagenProviderImproved:
         # ✅ Build parts array with image (if provided) and text
         parts = []
         
-        # ✅ Add source image as reference if provided
-        if request.source_image_base64:
+        # ✅ Add source image as reference if provided (use hasattr for compatibility)
+        source_image = getattr(request, 'source_image_base64', None)
+        if source_image:
+            mime_type = getattr(request, 'source_mime_type', 'image/png')
             parts.append({
                 "inlineData": {
-                    "mimeType": request.source_mime_type,
-                    "data": request.source_image_base64
+                    "mimeType": mime_type,
+                    "data": source_image
                 }
             })
         

@@ -13,6 +13,17 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { path: '/dashboard', label: 'Dashboard', icon: '📊' },
   { path: '/learning', label: 'Start Learning', icon: '📚' },
+  // Enhanced Features
+  { path: '/learn-from-anything', label: 'Learn from Anything', icon: '📸' },
+  { path: '/reverse-classroom', label: 'Reverse Classroom', icon: '🎓' },
+  { path: '/time-travel', label: 'Time Travel', icon: '⏰' },
+  { path: '/concept-collision', label: 'Concept Collision', icon: '🔗' },
+  { path: '/mistake-autopsy', label: 'Mistake Autopsy', icon: '🔬' },
+  { path: '/youtube-course', label: 'YouTube to Course', icon: '📺' },
+  { path: '/debate-arena', label: 'Debate Arena', icon: '⚔️' },
+  { path: '/dream-project', label: 'Dream Project', icon: '🎯' },
+  { path: '/feynman', label: 'Feynman Technique', icon: '🧠' },
+  // Core Features
   { path: '/avatar', label: 'My Avatar', icon: '👤' },
   { path: '/characters', label: 'Characters', icon: '🎭' },
   { path: '/tournaments', label: 'Tournaments', icon: '🏆' },

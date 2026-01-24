@@ -382,7 +382,7 @@ for name, info in status.items():
 
 **Expected Startup Output:**
 ```
-🚀 Starting GenLearn AI...
+🚀 Starting Fun Learn...
 📦 AI Provider: gemini
 🖼️  Image Provider: gemini
 Checking provider health...
@@ -390,7 +390,7 @@ Checking provider health...
   ✅ image: GeminiImagenProvider - healthy
   ✅ tts: GCPTTSProvider - healthy
   ✅ stt: GCPSTTProvider - healthy
-✨ GenLearn AI is ready!
+✨ Fun Learn is ready!
 ```
 
 ### Health Endpoint

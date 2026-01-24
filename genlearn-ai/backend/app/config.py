@@ -1,5 +1,5 @@
 """
-Configuration settings for GenLearn AI
+Configuration settings for Fun Learn
 """
 
 import os
@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     """Application settings with validation"""
 
     # App Settings
-    APP_NAME: str = "GenLearn AI"
+    APP_NAME: str = "Fun Learn"
     APP_ENV: str = os.getenv("APP_ENV", "development")
     DEBUG: bool = os.getenv("DEBUG", "true").lower() == "true"
     SECRET_KEY: str = get_secret_key()

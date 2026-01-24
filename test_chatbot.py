@@ -45,15 +45,15 @@ import sys
 # ============================================================
 # CONFIGURATION - Gemini API Credentials
 # ============================================================
-# GCP Project: hackathon-472817
-# Account: koushikdeb2009@gmail.com
+# GCP Project: gen-lang-client-0511107229
+# Account: koushik_phd21@iiitkalyani.ac.in
 #
 # To get your API key:
 # 1. Go to: https://aistudio.google.com/app/apikey
-# 2. Create API key for project: hackathon-472817
+# 2. Create API key for project: gen-lang-client-0511107229
 # 3. Replace the placeholder below with your actual API key
 
-GEMINI_API_KEY = "Secret"  # <-- Replace with your actual API key
+GEMINI_API_KEY = "AIzaSyAPdNaogkzkuANFAgxyqRzBDUSaOUkUOw4"  # New GCP project key
 MODEL_NAME = "gemini-2.5-flash-lite-preview-09-2025"  # Gemini 2.5 Flash model
 
 # ============================================================
@@ -201,7 +201,7 @@ def main():
     print("=" * 60)
     print(f"\nPlatform: RDK x5 Kit (Ubuntu 22 ARM64)")
     print(f"Model: {MODEL_NAME}")
-    print(f"Project: hackathon-472817")
+    print(f"Project: gen-lang-client-0511107229")
     print("-" * 60)
     
     # Check if API key is set

@@ -336,6 +336,7 @@ class ContentGenerator:
         topic: str,
         difficulty_level: int,
         visual_style: str = "cartoon",
+        story_style: str = "fun",
         num_segments: int = 3,
         avatar_description: Optional[str] = None,
         character_descriptions: Optional[list[str]] = None
@@ -347,6 +348,7 @@ class ContentGenerator:
             topic: Learning topic
             difficulty_level: Difficulty level (1-10)
             visual_style: Visual style (cartoon/realistic)
+            story_style: Story narrative style (thriller/fun/nostalgic/adventure/mystery/scifi)
             num_segments: Number of story segments
             avatar_description: Avatar description
             character_descriptions: List of character descriptions
@@ -358,6 +360,7 @@ class ContentGenerator:
             topic=topic,
             difficulty_level=difficulty_level,
             visual_style=visual_style,
+            story_style=story_style,
             num_images=num_segments,
             avatar_description=avatar_description,
             character_descriptions=character_descriptions

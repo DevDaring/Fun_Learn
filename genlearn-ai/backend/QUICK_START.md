@@ -1,6 +1,6 @@
-# GenLearn AI Backend - Quick Start Guide
+# Fun Learn Backend - Quick Start Guide
 
-Get the GenLearn AI backend up and running in minutes!
+Get the Fun Learn backend up and running in minutes!
 
 ## Prerequisites
 
@@ -178,7 +178,7 @@ The easiest way to test is using Swagger UI:
 - Password: `password123`
 
 **Test User Account:**
-- Username: `john_doe`
+- Username: `DebK`
 - Password: `password123`
 
 > ⚠️ **Important:** Change these passwords before deploying to production!

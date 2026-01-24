@@ -13,6 +13,7 @@ class ContentGenerationRequest(BaseModel):
     topic: str
     difficulty_level: int  # 1-10
     visual_style: str  # "cartoon" or "realistic"
+    story_style: str = "fun"  # "thriller", "fun", "nostalgic", "adventure", "mystery", "scifi"
     num_images: int = 3
     avatar_description: Optional[str] = None
     character_descriptions: Optional[list[str]] = None

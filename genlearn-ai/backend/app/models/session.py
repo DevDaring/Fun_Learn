@@ -28,12 +28,23 @@ class VisualStyle(str, Enum):
     REALISTIC = "realistic"
 
 
+class StoryStyle(str, Enum):
+    """Story narrative style options"""
+    THRILLER = "thriller"
+    FUN = "fun"
+    NOSTALGIC = "nostalgic"
+    ADVENTURE = "adventure"
+    MYSTERY = "mystery"
+    SCIFI = "scifi"
+
+
 class SessionCreate(BaseModel):
     """Model for creating a new learning session"""
     topic: str = Field(..., min_length=1, max_length=200)
     difficulty_level: int = Field(..., ge=1, le=10)
     duration_minutes: int = Field(..., ge=5, le=120)
     visual_style: VisualStyle = VisualStyle.CARTOON
+    story_style: StoryStyle = StoryStyle.FUN
     play_mode: PlayMode = PlayMode.SOLO
     team_id: Optional[str] = None
     tournament_id: Optional[str] = None
@@ -52,7 +63,10 @@ class LearningSession(BaseModel):
     difficulty_level: int = Field(ge=1, le=10)
     duration_minutes: int = Field(ge=5, le=120)
     visual_style: str
+    story_style: str = "fun"
     play_mode: str
+    avatar_id: Optional[str] = None
+    character_ids: Optional[list[str]] = None
     team_id: Optional[str] = None
     tournament_id: Optional[str] = None
     status: str = "in_progress"
@@ -80,6 +94,31 @@ class SessionEnd(BaseModel):
     completed: bool = True
 
 
+class TextOverlay(BaseModel):
+    """Text to overlay on scene image"""
+    text: str
+    position: str = "bottom"  # "top", "center", "bottom"
+    style: str = "caption"  # "speech_bubble", "caption", "dramatic"
+
+
+class QuizOption(BaseModel):
+    """Single quiz option"""
+    key: str  # A, B, C, D
+    text: str
+    is_correct: bool = False
+
+
+class QuizQuestion(BaseModel):
+    """Quiz question with options"""
+    question_id: str
+    question_text: str
+    options: list[QuizOption]
+    correct_answers: list[str]  # List of correct option keys
+    explanation: str
+    is_multi_select: bool = False
+    points: int = 10
+
+
 class StorySegment(BaseModel):
     """Story segment within a learning session"""
     segment_number: int = Field(..., ge=1)
@@ -88,6 +127,17 @@ class StorySegment(BaseModel):
     image_prompt: str
     image_url: Optional[str] = None
     audio_url: Optional[str] = None
+
+
+class EnhancedStorySegment(BaseModel):
+    """Enhanced story segment with text overlay and quiz"""
+    segment_number: int = Field(..., ge=1)
+    narrative: str
+    scene_description: str
+    scene_image_url: Optional[str] = None
+    text_overlay: TextOverlay
+    audio_url: Optional[str] = None
+    quiz: QuizQuestion
 
 
 class SessionContent(BaseModel):

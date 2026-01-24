@@ -1,8 +1,8 @@
 #!/bin/bash
-# GenLearn AI Backend - Quick Start Script for Unix/Linux/macOS
+# Fun Learn Backend - Quick Start Script for Unix/Linux/macOS
 
 echo "============================================================"
-echo "GenLearn AI Backend - Quick Start"
+echo "Fun Learn Backend - Quick Start"
 echo "============================================================"
 echo ""
 
@@ -45,7 +45,7 @@ fi
 # Start server
 echo ""
 echo "============================================================"
-echo "Starting GenLearn AI Backend Server..."
+echo "Starting Fun Learn Backend Server..."
 echo "============================================================"
 echo ""
 python run.py --reload

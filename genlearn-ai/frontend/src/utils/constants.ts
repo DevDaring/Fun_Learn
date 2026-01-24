@@ -2,7 +2,7 @@
  * Application constants
  */
 
-export const APP_NAME = 'GenLearn AI';
+export const APP_NAME = 'Fun Learn';
 
 export const DIFFICULTY_LEVELS = [
   { value: 1, label: 'Very Easy' },
@@ -60,3 +60,12 @@ export const POINTS = {
   DESCRIPTIVE_MAX: 10,
   STREAK_BONUS: 50,
 };
+
+export const STORY_STYLES = [
+  { value: 'thriller', label: 'Thriller', icon: '🔪', description: 'Suspenseful and edge-of-your-seat' },
+  { value: 'fun', label: 'Fun', icon: '🎉', description: 'Light-hearted and entertaining' },
+  { value: 'nostalgic', label: 'Nostalgic', icon: '📜', description: 'Warm memories and classic vibes' },
+  { value: 'adventure', label: 'Adventure', icon: '🗺️', description: 'Epic journeys and discoveries' },
+  { value: 'mystery', label: 'Mystery', icon: '🔍', description: 'Clues, puzzles, and revelations' },
+  { value: 'scifi', label: 'Sci-Fi', icon: '🚀', description: 'Futuristic and technological' },
+];

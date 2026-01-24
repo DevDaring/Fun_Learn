@@ -1,5 +1,5 @@
 """
-GenLearn AI - Main FastAPI Application
+Fun Learn - Main FastAPI Application
 """
 
 from fastapi import FastAPI
@@ -21,7 +21,9 @@ from app.api.routes import (
     tournaments,
     teams,
     admin,
-    chat
+    chat,
+    features,
+    feynman
 )
 from app.services.provider_factory import ProviderFactory
 
@@ -31,7 +33,7 @@ async def lifespan(app: FastAPI):
     """Application startup and shutdown events."""
     # Startup
     print("=" * 60)
-    print("🚀 Starting GenLearn AI...")
+    print("🚀 Starting Fun Learn...")
     print("=" * 60)
     print(f"📦 AI Provider: {os.getenv('AI_PROVIDER', 'gemini')}")
     print(f"🖼️  Image Provider: {os.getenv('IMAGE_PROVIDER', 'fibo')}")
@@ -54,7 +56,7 @@ async def lifespan(app: FastAPI):
         print(f"  ⚠️  Provider health check failed: {e}")
 
     print("=" * 60)
-    print("✨ GenLearn AI is ready!")
+    print("✨ Fun Learn is ready!")
     print(f"📚 API Documentation: http://{settings.BACKEND_HOST}:{settings.BACKEND_PORT}/docs")
     print("=" * 60)
 
@@ -62,14 +64,14 @@ async def lifespan(app: FastAPI):
 
     # Shutdown
     print("\n" + "=" * 60)
-    print("👋 Shutting down GenLearn AI...")
+    print("👋 Shutting down Fun Learn...")
     print("=" * 60)
 
 
 app = FastAPI(
-    title="GenLearn AI",
+    title="Fun Learn",
     description="Generative AI-Enabled Adaptive Learning System",
-    version="1.0.0-prototype",
+    version="2.0.0",
     lifespan=lifespan
 )
 
@@ -81,7 +83,8 @@ app.add_middleware(
         "http://localhost:5173",
         "http://localhost:3000",
         "http://127.0.0.1:5173",
-        "http://127.0.0.1:3000"
+        "http://127.0.0.1:3000",
+        "http://[::1]:5173"
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -105,13 +108,15 @@ app.include_router(tournaments.router, prefix="/api/tournaments", tags=["Tournam
 app.include_router(teams.router, prefix="/api/teams", tags=["Teams"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])
+app.include_router(features.router, prefix="/api/features", tags=["Enhanced Features"])
+app.include_router(feynman.router, prefix="/api")  # Feynman Engine
 
 
 @app.get("/")
 async def root():
     """Root endpoint with API information"""
     return {
-        "message": "Welcome to GenLearn AI",
+        "message": "Welcome to Fun Learn",
         "version": "1.0.0-prototype",
         "description": "Generative AI-Enabled Adaptive Learning System",
         "docs": "/docs",

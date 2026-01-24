@@ -3,7 +3,7 @@
 
 import google.generativeai as genai
 
-API_KEY = "AIzaSyAPdNaogkzkuANFAgxyqRzBDUSaOUkUOw4"
+API_KEY = "loaded_from_env"
 TEXT_MODEL = "gemini-3-pro-preview"
 IMAGE_MODEL = "gemini-3-pro-image-preview"
 

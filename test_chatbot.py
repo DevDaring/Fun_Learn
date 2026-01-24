@@ -53,7 +53,7 @@ import sys
 # 2. Create API key for project: gen-lang-client-0511107229
 # 3. Replace the placeholder below with your actual API key
 
-GEMINI_API_KEY = "AIzaSyAPdNaogkzkuANFAgxyqRzBDUSaOUkUOw4"  # New GCP project key
+GEMINI_API_KEY = "Loaded_from_env"  # New GCP project key
 MODEL_NAME = "gemini-2.5-flash-lite-preview-09-2025"  # Gemini 2.5 Flash model
 
 # ============================================================

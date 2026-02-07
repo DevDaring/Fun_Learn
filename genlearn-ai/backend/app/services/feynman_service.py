@@ -14,6 +14,7 @@ from app.models.feynman_models import (
     AnalogyEvaluation, LectureHallResponse, PersonaFeedback
 )
 from app.database.feynman_db import feynman_db
+from app.utils.languages import get_language_instruction
 
 
 class FeynmanAIService:
@@ -105,9 +106,9 @@ class FeynmanAIService:
         else:
             return "neutral"
     
-    # ============== LAYER 1: CHINTU (CURIOUS CHILD) ==============
+    # ============== LAYER 1: RITTY (CURIOUS CHILD) ==============
     
-    async def chintu_respond(
+    async def ritty_respond(
         self,
         session_id: str,
         topic: str,
@@ -116,7 +117,8 @@ class FeynmanAIService:
         conversation_history: List[Dict[str, Any]],
         difficulty_level: int,
         image_base64: Optional[str] = None,
-        image_mime_type: Optional[str] = None
+        image_mime_type: Optional[str] = None,
+        language: str = "en"
     ) -> RittyResponse:
         """Generate Ritty's response to student's explanation"""
         
@@ -127,8 +129,13 @@ class FeynmanAIService:
                 role = "Student" if turn['role'] == 'user' else "Ritty"
                 context += f"{role}: {turn['message']}\n"
         
+        # Get language instruction for multi-language support
+        lang_instruction = get_language_instruction(language)
+        
         prompt = f"""You are Ritty, a curious and enthusiastic 8-year-old boy.
 A student is trying to teach you about "{topic}" (subject: {subject}).
+
+{lang_instruction}
 
 RITTY'S PERSONALITY:
 - You are genuinely curious and want to understand
@@ -188,7 +195,7 @@ IMPORTANT: Return ONLY the JSON object. No other text."""
             )
             
         except Exception as e:
-            print(f"Error in chintu_respond: {e}")
+            print(f"Error in ritty_respond: {e}")
             return RittyResponse(
                 response="Hmm, I'm thinking about what you said... Can you tell me more?",
                 confusion_level=0.5,
@@ -208,9 +215,13 @@ IMPORTANT: Return ONLY the JSON object. No other text."""
         original_explanation: str,
         compressed_explanation: str,
         word_limit: int,
-        previous_compressions: List[Dict[str, Any]]
+        previous_compressions: List[Dict[str, Any]],
+        language: str = "en"
     ) -> CompressionEvaluation:
         """Evaluate a compression challenge attempt"""
+        
+        # Get language instruction for multi-language support
+        lang_instruction = get_language_instruction(language)
         
         prev_context = ""
         if previous_compressions:
@@ -222,6 +233,8 @@ IMPORTANT: Return ONLY the JSON object. No other text."""
         
         prompt = f"""You are an expert evaluator for the Compression Challenge.
 The student must progressively compress their explanation while preserving essential meaning.
+
+{lang_instruction}
 
 EVALUATION CRITERIA:
 1. Core Concept Preserved: Is the fundamental idea still accurately conveyed?
@@ -303,9 +316,13 @@ IMPORTANT: Return ONLY the JSON object."""
         current_depth: int,
         user_response: str,
         admits_unknown: bool,
-        conversation_history: List[Dict[str, Any]]
+        conversation_history: List[Dict[str, Any]],
+        language: str = "en"
     ) -> WhySpiralResponse:
         """Generate the next 'why' question or detect knowledge boundary"""
+        
+        # Get language instruction for multi-language support
+        lang_instruction = get_language_instruction(language)
         
         context = ""
         for turn in conversation_history[-10:]:
@@ -315,6 +332,8 @@ IMPORTANT: Return ONLY the JSON object."""
         
         prompt = f"""You are a Socratic questioner conducting the "Why Spiral."
 Your goal is to probe the student's understanding by asking progressive "why" questions.
+
+{lang_instruction}
 
 SPIRAL DEPTH LEVELS:
 - Level 1: Surface explanation (What happens?)
@@ -386,9 +405,13 @@ IMPORTANT: Return ONLY the JSON object."""
         analogy_text: str,
         phase: str,  # 'create', 'defend', 'refine'
         defense_response: Optional[str] = None,
-        previous_feedback: Optional[str] = None
+        previous_feedback: Optional[str] = None,
+        language: str = "en"
     ) -> AnalogyEvaluation:
         """Evaluate user's analogy and conduct stress test"""
+        
+        # Get language instruction for multi-language support
+        lang_instruction = get_language_instruction(language)
         
         phase_instructions = {
             'create': "This is the CREATE phase. Evaluate the analogy for the first time. Identify strengths, weaknesses, and prepare a stress test question.",
@@ -397,6 +420,8 @@ IMPORTANT: Return ONLY the JSON object."""
         }
         
         prompt = f"""You are an expert at evaluating educational analogies.
+
+{lang_instruction}
 
 Good analogies should:
 1. Map source domain concepts to target domain accurately
@@ -461,9 +486,13 @@ IMPORTANT: Return ONLY the JSON object."""
         topic: str,
         subject: str,
         user_explanation: str,
-        conversation_history: List[Dict[str, Any]]
+        conversation_history: List[Dict[str, Any]],
+        language: str = "en"
     ) -> LectureHallResponse:
         """Get responses from all 5 Lecture Hall personas"""
+        
+        # Get language instruction for multi-language support
+        lang_instruction = get_language_instruction(language)
         
         context = ""
         for turn in conversation_history[-6:]:
@@ -473,6 +502,8 @@ IMPORTANT: Return ONLY the JSON object."""
         
         prompt = f"""You control 5 different personas in a "Lecture Hall" setting.
 Each persona has different needs and will evaluate the same explanation differently.
+
+{lang_instruction}
 
 THE 5 PERSONAS:
 

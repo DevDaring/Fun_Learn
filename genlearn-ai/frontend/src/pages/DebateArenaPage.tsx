@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { formatChatContent } from '../utils/helpers';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface DebateTopic {
     topic: string;
@@ -33,6 +34,7 @@ export const DebateArenaPage: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [roundNumber, setRoundNumber] = useState(1);
     const [scores, setScores] = useState({ student: 0, ai: 0 });
+    const { selectedLanguage } = useLanguage();
 
     useEffect(() => {
         loadTopics();
@@ -75,7 +77,8 @@ export const DebateArenaPage: React.FC = () => {
                 student_position: position,
                 user_message: argument,
                 difficulty,
-                round_number: roundNumber
+                round_number: roundNumber,
+                language: selectedLanguage
             });
 
             const roundScore = response.data.round_score || { student: 0, ai: 0 };

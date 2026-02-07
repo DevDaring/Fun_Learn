@@ -201,10 +201,47 @@ async def get_user_sessions(
     return {"user_id": user_id, "sessions": sessions}
 
 
-# ============== LAYER 1: CHINTU (CURIOUS CHILD) ==============
+@router.get("/session/{session_id}/full")
+async def get_session_with_conversations(session_id: str):
+    """Get a session with all its conversation history from all layers.
+    Used by Mistake Autopsy to load full chat history for analysis."""
+    
+    session = feynman_db.get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Get conversation history for all layers
+    conversations = {}
+    all_messages = []
+    
+    for layer in range(1, 6):
+        history = feynman_db.get_conversation_history(session_id, layer)
+        if history:
+            conversations[f"layer_{layer}"] = history
+            # Add layer info to each message and collect all
+            for msg in history:
+                all_messages.append({
+                    **msg,
+                    "layer": layer
+                })
+    
+    # Sort all messages by created_at if available
+    try:
+        all_messages.sort(key=lambda x: x.get('created_at', ''))
+    except:
+        pass
+    
+    return {
+        "session": session,
+        "conversations_by_layer": conversations,
+        "all_messages": all_messages
+    }
+
+
+# ============== LAYER 1: RITTY (CURIOUS CHILD) ==============
 
 @router.post("/layer1/teach", response_model=RittyResponse)
-async def teach_chintu(request: TeachMessageRequest):
+async def teach_ritty(request: TeachMessageRequest):
     """Send a teaching message to Ritty"""
     
     session = feynman_db.get_session(request.session_id)
@@ -223,7 +260,7 @@ async def teach_chintu(request: TeachMessageRequest):
     history = feynman_db.get_conversation_history(request.session_id, layer=1)
     
     # Get AI response
-    response = await feynman_ai.chintu_respond(
+    response = await feynman_ai.ritty_respond(
         session_id=request.session_id,
         topic=session['topic'],
         subject=session['subject'],
@@ -262,7 +299,7 @@ async def teach_chintu(request: TeachMessageRequest):
 
 
 @router.post("/layer1/start")
-async def start_chintu_session(session_id: str):
+async def start_ritty_session(session_id: str):
     """Get Ritty's opening message"""
     
     session = feynman_db.get_session(session_id)

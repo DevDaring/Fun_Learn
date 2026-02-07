@@ -4,6 +4,7 @@ import { useAuth } from './hooks/useAuth';
 import { Layout } from './components/layout/Layout';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { LoadingSpinner } from './components/common/LoadingSpinner';
+import { LanguageProvider } from './contexts/LanguageContext';
 
 // Pages
 import { HomePage } from './pages/HomePage';
@@ -54,262 +55,264 @@ function App() {
   }
 
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Public routes */}
-        <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<LoginPage />} />
+    <LanguageProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
 
-        {/* Protected routes */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <DashboardPage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/learning"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <LearningPage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/avatar"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <AvatarPage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/characters"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <CharactersPage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/tournaments"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <TournamentsPage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/leaderboard"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <LeaderboardPage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <ProfilePage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <SettingsPage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/history"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <HistoryPage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/learning/revision/:sessionId"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <RevisionPage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
+          {/* Protected routes */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <DashboardPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/learning"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <LearningPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/avatar"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <AvatarPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/characters"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <CharactersPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tournaments"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <TournamentsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leaderboard"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <LeaderboardPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ProfilePage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <SettingsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/history"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <HistoryPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/learning/revision/:sessionId"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <RevisionPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
 
-        {/* Enhanced Features */}
-        <Route
-          path="/learn-from-anything"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <LearnFromAnythingPage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/reverse-classroom"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <ReverseClassroomPage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/time-travel"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <TimeTravelPage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/concept-collision"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <ConceptCollisionPage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/mistake-autopsy"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <MistakeAutopsyPage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/youtube-course"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <YouTubeCoursePage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/debate-arena"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <DebateArenaPage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/dream-project"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <DreamProjectPage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/feynman"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <FeynmanEnginePage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
+          {/* Enhanced Features */}
+          <Route
+            path="/learn-from-anything"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <LearnFromAnythingPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reverse-classroom"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ReverseClassroomPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/time-travel"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <TimeTravelPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/concept-collision"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ConceptCollisionPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/mistake-autopsy"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <MistakeAutopsyPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/youtube-course"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <YouTubeCoursePage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/debate-arena"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <DebateArenaPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dream-project"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <DreamProjectPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/feynman"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <FeynmanEnginePage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
 
-        {/* Admin routes */}
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute requireAdmin>
-              <Layout>
-                <AdminHomePage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/tournaments"
-          element={
-            <ProtectedRoute requireAdmin>
-              <Layout>
-                <ManageTournamentsPage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/teams"
-          element={
-            <ProtectedRoute requireAdmin>
-              <Layout>
-                <ManageTeamsPage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/questions"
-          element={
-            <ProtectedRoute requireAdmin>
-              <Layout>
-                <ManageQuestionsPage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/users"
-          element={
-            <ProtectedRoute requireAdmin>
-              <Layout>
-                <ManageUsersPage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
+          {/* Admin routes */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute requireAdmin>
+                <Layout>
+                  <AdminHomePage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/tournaments"
+            element={
+              <ProtectedRoute requireAdmin>
+                <Layout>
+                  <ManageTournamentsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/teams"
+            element={
+              <ProtectedRoute requireAdmin>
+                <Layout>
+                  <ManageTeamsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/questions"
+            element={
+              <ProtectedRoute requireAdmin>
+                <Layout>
+                  <ManageQuestionsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute requireAdmin>
+                <Layout>
+                  <ManageUsersPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
 
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </LanguageProvider>
   );
 }
 

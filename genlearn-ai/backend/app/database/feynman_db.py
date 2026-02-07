@@ -6,6 +6,7 @@ Fun Learn Application
 import os
 import json
 import uuid
+import math
 import pandas as pd
 from datetime import datetime
 from typing import Optional, List, Dict, Any
@@ -154,7 +155,7 @@ class FeynmanDatabase:
                 sessions = sessions[sessions['status'] == status]
             
             sessions = sessions.sort_values('started_at', ascending=False).head(limit)
-            return sessions.to_dict('records')
+            return self._sanitize_records(sessions.to_dict('records'))
         except Exception as e:
             print(f"Error getting user sessions: {e}")
             return []
@@ -219,10 +220,26 @@ class FeynmanDatabase:
                 history = history[history['layer'] == layer]
             
             history = history.sort_values(['layer', 'turn_number'])
-            return history.to_dict('records')
+            return self._sanitize_records(history.to_dict('records'))
         except Exception as e:
             print(f"Error getting conversation history: {e}")
             return []
+    
+    def _sanitize_records(self, records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Sanitize NaN values in records to make them JSON-serializable"""
+        sanitized = []
+        for record in records:
+            clean_record = {}
+            for key, value in record.items():
+                # Handle NaN values
+                if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+                    clean_record[key] = None
+                elif pd.isna(value):
+                    clean_record[key] = None
+                else:
+                    clean_record[key] = value
+            sanitized.append(clean_record)
+        return sanitized
     
     # ============== GAP OPERATIONS ==============
     
@@ -281,7 +298,7 @@ class FeynmanDatabase:
             if resolved is not None:
                 gaps = gaps[gaps['resolved'] == resolved]
             
-            return gaps.to_dict('records')
+            return self._sanitize_records(gaps.to_dict('records'))
         except Exception as e:
             print(f"Error getting user gaps: {e}")
             return []
@@ -291,7 +308,7 @@ class FeynmanDatabase:
         try:
             df = pd.read_csv(self.gaps_path)
             gaps = df[df['session_id'] == session_id]
-            return gaps.to_dict('records')
+            return self._sanitize_records(gaps.to_dict('records'))
         except Exception:
             return []
     
@@ -375,7 +392,7 @@ class FeynmanDatabase:
                 df = df[df['is_featured'] == True]
             
             df = df.sort_values('community_rating', ascending=False).head(limit)
-            return df.to_dict('records')
+            return self._sanitize_records(df.to_dict('records'))
         except Exception as e:
             print(f"Error getting analogies: {e}")
             return []

@@ -54,6 +54,7 @@ export const MistakeAutopsyPage: React.FC = () => {
     const [mctInput, setMctInput] = useState('');
     const [mctSessionId, setMctSessionId] = useState<string | null>(null);
     const [currentPhase, setCurrentPhase] = useState('surface_capture');
+    const [mctTurnNumber, setMctTurnNumber] = useState(1);
     const [cascadeTracking, setCascadeTracking] = useState<CascadeTracking>({
         surface_error: '',
         tested_prerequisites: [],
@@ -67,7 +68,229 @@ export const MistakeAutopsyPage: React.FC = () => {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [mctMessages]);
 
+    // History Section States - SAFE: Click-to-load, no blocking
+    const [showHistorySources, setShowHistorySources] = useState(false);
+    const [historyLoading, setHistoryLoading] = useState(false);
+    const [selectedHistoryItem, setSelectedHistoryItem] = useState<any | null>(null);
+
+    // Independent source states (each can fail independently)
+    const [feynmanHistory, setFeynmanHistory] = useState<any[]>([]);
+    const [learningHistory, setLearningHistory] = useState<any[]>([]);
+    const [sessionsHistory, setSessionsHistory] = useState<any[]>([]);
+    const [mctHistory, setMctHistory] = useState<any[]>([]);
+
+    // Loaded conversation for chat-based analysis
+    const [loadedConversation, setLoadedConversation] = useState<any[]>([]);
+    const [inputMode, setInputMode] = useState<'manual' | 'chat'>('manual');
+    const [conversationLoading, setConversationLoading] = useState(false);
+
+    // Toggle and load history sources
+    const toggleHistorySources = () => {
+        if (!showHistorySources && feynmanHistory.length === 0 && mctHistory.length === 0) {
+            loadAllHistory();
+        }
+        setShowHistorySources(!showHistorySources);
+    };
+
+    // Load all history sources in parallel with independent error handling
+    const loadAllHistory = async () => {
+        setHistoryLoading(true);
+        await Promise.allSettled([
+            loadFeynmanHistory(),
+            loadLearningHistory(),
+            loadSessionsHistory(),
+            loadMctHistory()
+        ]);
+        setHistoryLoading(false);
+    };
+
+    // Load Feynman sessions
+    const loadFeynmanHistory = async () => {
+        try {
+            const res = await api.client.get('/feynman/sessions/user/guest?limit=10');
+            setFeynmanHistory(res.data.sessions || []);
+        } catch (err) {
+            console.error('Failed to load Feynman history:', err);
+            setFeynmanHistory([]);
+        }
+    };
+
+    // Load Learning history
+    const loadLearningHistory = async () => {
+        try {
+            const res = await api.client.get('/learning/sessions?limit=10');
+            setLearningHistory(res.data.sessions || res.data || []);
+        } catch (err) {
+            console.error('Failed to load Learning history:', err);
+            setLearningHistory([]);
+        }
+    };
+
+    // Load general sessions history
+    const loadSessionsHistory = async () => {
+        try {
+            const res = await api.client.get('/sessions?limit=10');
+            setSessionsHistory(res.data.sessions || res.data || []);
+        } catch (err) {
+            console.error('Failed to load Sessions history:', err);
+            setSessionsHistory([]);
+        }
+    };
+
+    // Load MCT/Mistake Autopsy sessions history
+    const loadMctHistory = async () => {
+        try {
+            const res = await api.client.get('/features/mct/sessions/user/guest?limit=10');
+            setMctHistory(res.data.sessions || []);
+        } catch (err) {
+            console.error('Failed to load MCT history:', err);
+            setMctHistory([]);
+        }
+    };
+
+    // Select history item and pre-fill form - fetches conversation for Feynman
+    const selectHistoryItem = async (item: any, source: string) => {
+        setSelectedHistoryItem({ ...item, source });
+
+        // Pre-fill form based on source
+        setQuestion(item.topic || item.original_question || item.name || '');
+        setSubject(item.subject || 'Mathematics');
+        setTopic(item.topic || '');
+
+        // For MCT items, DIRECTLY RESUME the session (enter chat mode)
+        if (source === 'mct') {
+            setStudentAnswer(item.student_answer || '');
+            setCorrectAnswer(item.correct_answer || '');
+            setLoadedConversation([]);
+            setInputMode('manual');
+
+            // Resume the MCT session directly
+            setMctSessionId(item.id);
+            setCurrentPhase(item.phase || 'surface_capture');
+
+            // Fetch conversation history for this session
+            try {
+                const historyRes = await api.client.get(`/features/mct/conversation/${item.id}`);
+                const messages = historyRes.data.messages || [];
+
+                if (messages.length > 0) {
+                    // Load previous messages including images
+                    const loadedMessages = messages.map((m: any) => ({
+                        role: m.role,
+                        content: m.message,
+                        phase: m.phase,
+                        imageUrl: m.image_path || undefined  // Just pass the path, display code handles URL
+                    }));
+
+                    // Add welcome back message at the end
+                    loadedMessages.push({
+                        role: 'assistant',
+                        content: `Welcome back! Here's our previous discussion. You can continue from where we left off.`,
+                        phase: item.phase
+                    });
+
+                    setMctMessages(loadedMessages);
+                } else {
+                    // No previous messages, show welcome message
+                    setMctMessages([{
+                        role: 'assistant',
+                        content: `Welcome back! Let's continue analyzing your answer about "${item.topic || item.original_question?.slice(0, 50)}". Tell me more about your understanding!`,
+                        phase: item.phase
+                    }]);
+                }
+            } catch (err) {
+                console.error('Failed to load MCT history:', err);
+                // Fallback welcome message
+                setMctMessages([{
+                    role: 'assistant',
+                    content: `Welcome back! Let's continue analyzing your answer about "${item.topic || item.original_question?.slice(0, 50)}".`,
+                    phase: item.phase
+                }]);
+            }
+
+            // Enter chat mode directly
+            setMode('mct_chat');
+            return;
+        }
+
+        // For learning and sessions sources, pre-fill with helpful defaults
+        if (source === 'learning' || source === 'sessions') {
+            // These sessions don't have student answers stored, but we can use the topic
+            // to let users do a quick analysis based on the topic
+            setStudentAnswer(`[Review my understanding of: ${item.topic || 'this topic'}]`);
+            setCorrectAnswer(`[Analyze my learning from this session]`);
+            setLoadedConversation([]);
+            setInputMode('manual');
+            return;
+        }
+
+        // Clear answers for other sources
+        setStudentAnswer('');
+        setCorrectAnswer('');
+
+        // For Feynman sessions, fetch full conversation
+        if (source === 'feynman' && item.id) {
+            setConversationLoading(true);
+            try {
+                const res = await api.client.get(`/feynman/session/${item.id}/full`);
+                const allMessages = res.data.all_messages || [];
+                setLoadedConversation(allMessages);
+                setInputMode('chat');
+            } catch (err) {
+                console.error('Failed to load conversation:', err);
+                setLoadedConversation([]);
+                setInputMode('manual');
+            } finally {
+                setConversationLoading(false);
+            }
+        } else {
+            setLoadedConversation([]);
+            setInputMode('manual');
+        }
+    };
+
     const handleBasicAnalyze = async () => {
+        // Chat mode - analyze the loaded conversation
+        if (inputMode === 'chat' && loadedConversation.length > 0) {
+            // Extract user messages as the "student's answer/explanation"
+            const userMessages = loadedConversation
+                .filter(m => m.role === 'user')
+                .map(m => m.message)
+                .join('\n');
+
+            // Extract AI feedback as context (contains identified mistakes/weaknesses)
+            const aiFeedback = loadedConversation
+                .filter(m => m.role === 'assistant')
+                .map(m => m.message)
+                .join('\n');
+
+            if (!userMessages.trim()) {
+                alert('No user messages found in the conversation.');
+                return;
+            }
+
+            setLoading(true);
+            try {
+                const response = await api.client.post('/features/mistake/analyze', {
+                    question: `Analyze this learning conversation about: ${question}`,
+                    correct_answer: `The AI already identified these issues:\n${aiFeedback.substring(0, 500)}`,
+                    student_answer: userMessages,
+                    subject,
+                    topic: topic || subject
+                });
+
+                setResult(response.data);
+                setMode('basic_result');
+            } catch (err) {
+                console.error('Analysis failed:', err);
+                alert('Failed to analyze conversation. Please try again.');
+            } finally {
+                setLoading(false);
+            }
+            return;
+        }
+
+        // Manual mode - original behavior
         if (!question.trim() || !correctAnswer.trim() || !studentAnswer.trim()) return;
 
         setLoading(true);
@@ -91,6 +314,55 @@ export const MistakeAutopsyPage: React.FC = () => {
     };
 
     const handleStartMCT = async () => {
+        // Chat mode - analyze loaded conversation with MCT
+        if (inputMode === 'chat' && loadedConversation.length > 0) {
+            const userMessages = loadedConversation
+                .filter(m => m.role === 'user')
+                .map(m => m.message)
+                .join('\n');
+
+            const aiFeedback = loadedConversation
+                .filter(m => m.role === 'assistant')
+                .map(m => m.message)
+                .join('\n');
+
+            if (!userMessages.trim()) {
+                alert('No user messages found in the conversation.');
+                return;
+            }
+
+            setLoading(true);
+            try {
+                const response = await api.client.post('/features/mct/start', {
+                    question: `Deep analysis of learning conversation about: ${question}`,
+                    correct_answer: `AI feedback context:\n${aiFeedback.substring(0, 500)}`,
+                    student_answer: userMessages,
+                    subject,
+                    topic: topic || subject
+                });
+
+                setMctSessionId(response.data.session_id);
+                setCurrentPhase(response.data.phase || 'surface_capture');
+                setCascadeTracking(response.data.cascade_tracking || cascadeTracking);
+
+                setMctMessages([{
+                    role: 'assistant',
+                    content: response.data.message || "Let's explore the conversation and find the root cause...",
+                    phase: response.data.phase,
+                    diagnosticQuestion: response.data.diagnostic_question
+                }]);
+
+                setMode('mct_chat');
+            } catch (err) {
+                console.error('MCT start failed:', err);
+                alert('Failed to start MCT session. Please try again.');
+            } finally {
+                setLoading(false);
+            }
+            return;
+        }
+
+        // Manual mode - original behavior
         if (!question.trim() || !correctAnswer.trim() || !studentAnswer.trim()) return;
 
         setLoading(true);
@@ -148,19 +420,23 @@ export const MistakeAutopsyPage: React.FC = () => {
                 session_id: mctSessionId,
                 conversation_history: conversationHistory,
                 phase: currentPhase,
-                cascade_tracking: cascadeTracking
+                cascade_tracking: cascadeTracking,
+                turn_number: mctTurnNumber
             });
 
             // Update phase and tracking
             if (response.data.phase) setCurrentPhase(response.data.phase);
             if (response.data.cascade_tracking) setCascadeTracking(response.data.cascade_tracking);
 
+            // Increment turn number for next message
+            setMctTurnNumber(prev => prev + 1);
+
             setMctMessages(prev => [...prev, {
                 role: 'assistant',
                 content: response.data.message || "I see...",
                 phase: response.data.phase,
                 diagnosticQuestion: response.data.diagnostic_question,
-                imageUrl: response.data.image_url
+                imageUrl: response.data.image  // Base64 image from backend
             }]);
         } catch (err) {
             console.error('MCT chat failed:', err);
@@ -280,14 +556,14 @@ export const MistakeAutopsyPage: React.FC = () => {
                         <div className="grid grid-cols-2 gap-4 pt-4">
                             <button
                                 onClick={handleBasicAnalyze}
-                                disabled={loading || !question || !correctAnswer || !studentAnswer}
+                                disabled={loading || (inputMode === 'manual' && (!question || !correctAnswer || !studentAnswer)) || (inputMode === 'chat' && loadedConversation.length === 0)}
                                 className="py-3 bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-lg font-bold hover:from-teal-600 hover:to-cyan-600 disabled:opacity-50"
                             >
                                 {loading ? '🔬 Analyzing...' : '🔬 Quick Autopsy'}
                             </button>
                             <button
                                 onClick={handleStartMCT}
-                                disabled={loading || !question || !correctAnswer || !studentAnswer}
+                                disabled={loading || (inputMode === 'manual' && (!question || !correctAnswer || !studentAnswer)) || (inputMode === 'chat' && loadedConversation.length === 0)}
                                 className="py-3 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-lg font-bold hover:from-purple-600 hover:to-indigo-600 disabled:opacity-50"
                             >
                                 {loading ? '🧠 Starting...' : '🧠 Deep MCT Session'}
@@ -296,6 +572,189 @@ export const MistakeAutopsyPage: React.FC = () => {
                         <p className="text-sm text-gray-500 text-center">
                             <strong>Quick Autopsy:</strong> Fast single analysis | <strong>MCT Session:</strong> Interactive deep-dive to root cause
                         </p>
+
+                        {/* History Sources Section - Collapsible */}
+                        <div className="mt-6 pt-4 border-t border-gray-200">
+                            <button
+                                onClick={toggleHistorySources}
+                                className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-all"
+                            >
+                                <span className="font-medium text-gray-700">
+                                    📂 Load from Previous Sessions
+                                </span>
+                                <span className="text-gray-500 text-lg">
+                                    {showHistorySources ? '▲' : '▼'}
+                                </span>
+                            </button>
+
+                            {showHistorySources && (
+                                <div className="mt-4">
+                                    {historyLoading && (
+                                        <div className="text-center py-4 text-gray-500">
+                                            ⏳ Loading history from all sources...
+                                        </div>
+                                    )}
+
+                                    {selectedHistoryItem && (
+                                        <div className="mb-4 p-3 bg-teal-50 border border-teal-200 rounded-lg">
+                                            <span className="text-teal-700 font-medium">
+                                                ✅ Selected: "{selectedHistoryItem.topic || selectedHistoryItem.name}" from {selectedHistoryItem.source}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {/* Conversation Preview - Shows loaded chat history */}
+                                    {conversationLoading && (
+                                        <div className="mb-4 p-4 bg-gray-50 rounded-lg text-center">
+                                            <span className="text-gray-500">⏳ Loading conversation...</span>
+                                        </div>
+                                    )}
+
+                                    {loadedConversation.length > 0 && !conversationLoading && (
+                                        <div className="mb-4 bg-gray-50 rounded-lg p-4">
+                                            <h4 className="font-bold text-gray-700 mb-3 flex items-center gap-2">
+                                                💬 Conversation Preview
+                                                <span className="text-xs font-normal text-gray-500">({loadedConversation.length} messages)</span>
+                                            </h4>
+                                            <div className="max-h-48 overflow-y-auto space-y-2">
+                                                {loadedConversation.slice(0, 10).map((msg, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className={`p-2 rounded text-sm ${msg.role === 'user'
+                                                            ? 'bg-blue-50 border-l-4 border-blue-400'
+                                                            : 'bg-gray-100 border-l-4 border-gray-400'
+                                                            }`}
+                                                    >
+                                                        <span className="text-xs font-bold text-gray-600">
+                                                            {msg.role === 'user' ? '👤 You' : '🤖 AI'}
+                                                            {msg.layer && <span className="ml-1 text-gray-400">(Layer {msg.layer})</span>}
+                                                        </span>
+                                                        <p className="text-gray-700 mt-1 line-clamp-3">{msg.message}</p>
+                                                    </div>
+                                                ))}
+                                                {loadedConversation.length > 10 && (
+                                                    <p className="text-xs text-gray-400 text-center">
+                                                        ... and {loadedConversation.length - 10} more messages
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <p className="text-xs text-green-600 mt-2 font-medium">
+                                                ✓ Click "Quick Autopsy" or "Deep MCT" to analyze this conversation for mistakes!
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {/* Horizontal Scroll Container */}
+                                    <div className="overflow-x-auto pb-4">
+                                        <div className="flex gap-4 min-w-max">
+                                            {/* Feynman Sessions Column */}
+                                            <div className="w-64 flex-shrink-0 bg-white border rounded-lg shadow-sm">
+                                                <div className="p-3 bg-gradient-to-r from-amber-100 to-orange-100 rounded-t-lg">
+                                                    <h4 className="font-bold text-amber-800">🧠 Feynman Sessions</h4>
+                                                </div>
+                                                <div className="p-2 max-h-48 overflow-y-auto">
+                                                    {feynmanHistory.length === 0 ? (
+                                                        <p className="text-sm text-gray-400 p-2">No sessions found</p>
+                                                    ) : (
+                                                        feynmanHistory.map((item, idx) => (
+                                                            <button
+                                                                key={item.id || idx}
+                                                                onClick={() => selectHistoryItem(item, 'feynman')}
+                                                                className={`w-full text-left p-2 rounded hover:bg-amber-50 transition-all text-sm ${selectedHistoryItem?.source === 'feynman' && selectedHistoryItem?.id === item.id
+                                                                    ? 'bg-amber-100 border border-amber-300'
+                                                                    : ''
+                                                                    }`}
+                                                            >
+                                                                <div className="font-medium text-gray-800 truncate">{item.topic}</div>
+                                                                <div className="text-xs text-gray-500">{item.subject} • Layer {item.current_layer || 1}</div>
+                                                            </button>
+                                                        ))
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Learning History Column */}
+                                            <div className="w-64 flex-shrink-0 bg-white border rounded-lg shadow-sm">
+                                                <div className="p-3 bg-gradient-to-r from-blue-100 to-cyan-100 rounded-t-lg">
+                                                    <h4 className="font-bold text-blue-800">📚 Learning History</h4>
+                                                </div>
+                                                <div className="p-2 max-h-48 overflow-y-auto">
+                                                    {learningHistory.length === 0 ? (
+                                                        <p className="text-sm text-gray-400 p-2">No history found</p>
+                                                    ) : (
+                                                        learningHistory.map((item, idx) => (
+                                                            <button
+                                                                key={item.id || idx}
+                                                                onClick={() => selectHistoryItem(item, 'learning')}
+                                                                className={`w-full text-left p-2 rounded hover:bg-blue-50 transition-all text-sm ${selectedHistoryItem?.source === 'learning' && selectedHistoryItem?.id === item.id
+                                                                    ? 'bg-blue-100 border border-blue-300'
+                                                                    : ''
+                                                                    }`}
+                                                            >
+                                                                <div className="font-medium text-gray-800 truncate">{item.topic || item.question || item.title}</div>
+                                                                <div className="text-xs text-gray-500">{item.subject || 'General'}</div>
+                                                            </button>
+                                                        ))
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* General Sessions Column */}
+                                            <div className="w-64 flex-shrink-0 bg-white border rounded-lg shadow-sm">
+                                                <div className="p-3 bg-gradient-to-r from-purple-100 to-indigo-100 rounded-t-lg">
+                                                    <h4 className="font-bold text-purple-800">🎯 Past Sessions</h4>
+                                                </div>
+                                                <div className="p-2 max-h-48 overflow-y-auto">
+                                                    {sessionsHistory.length === 0 ? (
+                                                        <p className="text-sm text-gray-400 p-2">No sessions found</p>
+                                                    ) : (
+                                                        sessionsHistory.map((item, idx) => (
+                                                            <button
+                                                                key={item.id || idx}
+                                                                onClick={() => selectHistoryItem(item, 'sessions')}
+                                                                className={`w-full text-left p-2 rounded hover:bg-purple-50 transition-all text-sm ${selectedHistoryItem?.source === 'sessions' && selectedHistoryItem?.id === item.id
+                                                                    ? 'bg-purple-100 border border-purple-300'
+                                                                    : ''
+                                                                    }`}
+                                                            >
+                                                                <div className="font-medium text-gray-800 truncate">{item.topic || item.name || item.title}</div>
+                                                                <div className="text-xs text-gray-500">{item.subject || 'General'}</div>
+                                                            </button>
+                                                        ))
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* MCT History Column - Resume past analyses */}
+                                            <div className="w-64 flex-shrink-0 bg-white border rounded-lg shadow-sm">
+                                                <div className="p-3 bg-gradient-to-r from-red-100 to-pink-100 rounded-t-lg">
+                                                    <h4 className="font-bold text-red-800">🔬 MCT History</h4>
+                                                </div>
+                                                <div className="p-2 max-h-48 overflow-y-auto">
+                                                    {mctHistory.length === 0 ? (
+                                                        <p className="text-sm text-gray-400 p-2">No MCT sessions found</p>
+                                                    ) : (
+                                                        mctHistory.map((item, idx) => (
+                                                            <button
+                                                                key={item.id || idx}
+                                                                onClick={() => selectHistoryItem(item, 'mct')}
+                                                                className={`w-full text-left p-2 rounded hover:bg-red-50 transition-all text-sm ${selectedHistoryItem?.source === 'mct' && selectedHistoryItem?.id === item.id
+                                                                    ? 'bg-red-100 border border-red-300'
+                                                                    : ''
+                                                                    }`}
+                                                            >
+                                                                <div className="font-medium text-gray-800 truncate">{item.topic || item.original_question?.slice(0, 30)}</div>
+                                                                <div className="text-xs text-gray-500">{item.subject || 'General'} • {item.phase || 'In Progress'}</div>
+                                                            </button>
+                                                        ))
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
@@ -404,9 +863,9 @@ export const MistakeAutopsyPage: React.FC = () => {
 
                                     {msg.imageUrl && (
                                         <img
-                                            src={`http://localhost:8000${msg.imageUrl}`}
+                                            src={msg.imageUrl.startsWith('data:') ? msg.imageUrl : `http://localhost:8000${msg.imageUrl}`}
                                             alt="Explanation"
-                                            className="mt-2 rounded-lg max-w-full"
+                                            className="mt-2 rounded-lg max-w-full max-h-64"
                                         />
                                     )}
                                 </div>

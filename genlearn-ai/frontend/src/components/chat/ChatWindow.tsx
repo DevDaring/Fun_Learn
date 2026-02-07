@@ -3,11 +3,13 @@ import { ChatMessage } from './ChatMessage';
 import { ChatMessage as ChatMessageType } from '../../types';
 import { Button } from '../common/Button';
 import api from '../../services/api';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 export const ChatWindow: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { selectedLanguage } = useLanguage();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -33,7 +35,7 @@ export const ChatWindow: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await api.sendChatMessage(input);
+      const response = await api.sendChatMessage(input, undefined, selectedLanguage);
       const aiMessage: ChatMessageType = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -57,6 +59,7 @@ export const ChatWindow: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full">
+      {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4">
         {messages.length === 0 ? (
           <div className="text-center text-gray-500 mt-8">
@@ -71,6 +74,7 @@ export const ChatWindow: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Input Area */}
       <div className="border-t border-gray-200 p-4">
         <div className="flex space-x-2">
           <input

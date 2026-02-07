@@ -24,6 +24,7 @@ from app.services.voice_providers.base import BaseTTSProvider, BaseSTTProvider
 from app.services.voice_providers.gcp_tts import GCPTTSProvider
 from app.services.voice_providers.gcp_stt import GCPSTTProvider
 from app.services.voice_providers.azure_voice import AzureTTSProvider, AzureSTTProvider
+from app.services.voice_providers.none_provider import NoneTTSProvider, NoneSTTProvider
 
 
 class ProviderFactory:
@@ -113,6 +114,7 @@ class ProviderFactory:
     _tts_providers = {
         "gcp": GCPTTSProvider,
         "azure": AzureTTSProvider,
+        "none": NoneTTSProvider,
     }
 
     @classmethod
@@ -145,6 +147,7 @@ class ProviderFactory:
     _stt_providers = {
         "gcp": GCPSTTProvider,
         "azure": AzureSTTProvider,
+        "none": NoneSTTProvider,
     }
 
     @classmethod

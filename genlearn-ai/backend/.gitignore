@@ -35,6 +35,9 @@ venv.bak/
 .env.local
 .env.*.local
 
+# Secrets (service account credentials, API keys)
+secrets/
+
 # IDE
 .vscode/
 .idea/

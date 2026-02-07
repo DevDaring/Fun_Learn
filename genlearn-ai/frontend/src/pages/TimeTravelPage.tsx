@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { formatChatContent } from '../utils/helpers';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface HistoricalFigure {
     id: string;
@@ -26,6 +27,7 @@ export const TimeTravelPage: React.FC = () => {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [userInput, setUserInput] = useState('');
     const [loading, setLoading] = useState(false);
+    const { selectedLanguage } = useLanguage();
 
     useEffect(() => {
         loadFigures();
@@ -55,7 +57,8 @@ export const TimeTravelPage: React.FC = () => {
         try {
             const response = await api.client.post('/features/interview/chat', {
                 character_name: figure.character_name,
-                user_message: "Greetings! I've traveled through time to meet you. Please introduce yourself."
+                user_message: "Greetings! I've traveled through time to meet you. Please introduce yourself.",
+                language: selectedLanguage
             });
 
             setMessages([{
@@ -83,7 +86,8 @@ export const TimeTravelPage: React.FC = () => {
         try {
             const response = await api.client.post('/features/interview/chat', {
                 character_name: selectedFigure.character_name,
-                user_message: message
+                user_message: message,
+                language: selectedLanguage
             });
 
             setMessages(prev => [...prev, {

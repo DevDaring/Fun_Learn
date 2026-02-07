@@ -7,6 +7,7 @@ import logging
 import json
 from typing import Optional, Any
 from app.services.ai_providers.gemini import GeminiProvider
+from app.utils.languages import get_language_instruction
 
 logger = logging.getLogger(__name__)
 
@@ -352,7 +353,8 @@ RESPONSE FORMAT (JSON only):
         feature_type: str,
         user_message: str,
         context: dict,
-        image_base64: Optional[str] = None
+        image_base64: Optional[str] = None,
+        language: str = "en"
     ) -> dict:
         """Get AI response for a feature chat"""
         try:
@@ -363,8 +365,11 @@ RESPONSE FORMAT (JSON only):
             if context:
                 system_prompt = system_prompt.format(**context)
             
-            # Build the prompt
-            full_prompt = f"{system_prompt}\n\nUser: {user_message}\n\nRespond with valid JSON only."
+            # Get language instruction for multi-language support
+            lang_instruction = get_language_instruction(language)
+            
+            # Build the prompt with language instruction
+            full_prompt = f"{lang_instruction}\n\n{system_prompt}\n\nUser: {user_message}\n\nRespond with valid JSON only."
             
             # Call Gemini
             if image_base64:
@@ -402,3 +407,4 @@ RESPONSE FORMAT (JSON only):
 
 # Singleton instance
 feature_chat_service = FeatureChatService()
+

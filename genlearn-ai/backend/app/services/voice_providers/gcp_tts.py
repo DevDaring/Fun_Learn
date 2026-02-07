@@ -1,15 +1,20 @@
 """
 Google Cloud Platform Text-to-Speech Provider Implementation
-Uses Application Default Credentials (ADC) for authentication
+Uses Service Account credentials or Application Default Credentials (ADC) for authentication
 """
 
 import os
 import httpx
 import base64
 from typing import Optional
+from google.oauth2 import service_account
 from google.auth import default
 from google.auth.transport.requests import Request
 from .base import BaseTTSProvider
+
+
+# Scopes required for Cloud Text-to-Speech API
+CLOUD_TTS_SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
 
 
 class GCPTTSProvider(BaseTTSProvider):
@@ -19,9 +24,20 @@ class GCPTTSProvider(BaseTTSProvider):
         self.project_id = os.getenv("GCP_PROJECT_ID", "gen-lang-client-0639252091")
         self.base_url = "https://texttospeech.googleapis.com/v1"
         
-        # Get credentials using ADC
+        # Get credentials - prefer service account file if specified
+        credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "")
+        
         try:
-            self.credentials, project = default()
+            if credentials_path and os.path.exists(credentials_path):
+                # Load from service account JSON file with proper scopes
+                self.credentials = service_account.Credentials.from_service_account_file(
+                    credentials_path,
+                    scopes=CLOUD_TTS_SCOPES
+                )
+            else:
+                # Fall back to Application Default Credentials
+                self.credentials, project = default(scopes=CLOUD_TTS_SCOPES)
+            
             if not self.credentials.valid:
                 self.credentials.refresh(Request())
         except Exception as e:
@@ -172,10 +188,12 @@ class GCPTTSProvider(BaseTTSProvider):
         ]
 
     async def health_check(self) -> bool:
-        """Check if GCP TTS API is accessible."""
+        """Check if GCP TTS credentials are valid."""
         try:
-            # Try to synthesize a simple phrase
-            await self.synthesize_speech("Hello", "en", "female", 1.0)
-            return True
-        except Exception:
+            # Just verify we can get an access token - don't make actual API calls
+            # This is faster and doesn't require the TTS API to be enabled
+            token = self._get_access_token()
+            return token is not None and len(token) > 0
+        except Exception as e:
+            print(f"  [TTS Health Check Error]: {e}")
             return False

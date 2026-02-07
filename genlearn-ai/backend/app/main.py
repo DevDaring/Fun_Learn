@@ -23,9 +23,11 @@ from app.api.routes import (
     admin,
     chat,
     features,
-    feynman
+    feynman,
+    sessions
 )
 from app.services.provider_factory import ProviderFactory
+from app.utils.json_utils import NaNSafeJSONResponse
 
 
 @asynccontextmanager
@@ -72,7 +74,8 @@ app = FastAPI(
     title="Fun Learn",
     description="Generative AI-Enabled Adaptive Learning System",
     version="2.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
+    default_response_class=NaNSafeJSONResponse  # Handle NaN values globally
 )
 
 # CORS middleware
@@ -95,6 +98,12 @@ app.add_middleware(
 if settings.MEDIA_DIR.exists():
     app.mount("/media", StaticFiles(directory=str(settings.MEDIA_DIR)), name="media")
 
+# Mount static files for MCT images
+from pathlib import Path
+mct_data_dir = Path(__file__).parent.parent / "data"
+if mct_data_dir.exists():
+    app.mount("/data", StaticFiles(directory=str(mct_data_dir)), name="data")
+
 # Include routers
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(users.router, prefix="/api/users", tags=["Users"])
@@ -110,6 +119,7 @@ app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])
 app.include_router(features.router, prefix="/api/features", tags=["Enhanced Features"])
 app.include_router(feynman.router, prefix="/api")  # Feynman Engine
+app.include_router(sessions.router, prefix="/api/sessions", tags=["Sessions"])
 
 
 @app.get("/")

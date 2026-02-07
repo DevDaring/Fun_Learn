@@ -402,6 +402,52 @@ async def end_learning_session(
         )
 
 
+@router.get("/sessions", status_code=status.HTTP_200_OK)
+async def get_sessions_list(
+    limit: int = 10,
+    offset: int = 0
+):
+    """
+    Get learning sessions list (public endpoint for history loading)
+    
+    Returns sessions from sessions.csv for Mistake Autopsy integration.
+    No auth required since frontend calls this during history loading.
+    """
+    try:
+        csv_handler = CSVHandler()
+        
+        # Get all sessions (no user filter for guest mode)
+        all_sessions = csv_handler.read_all("sessions")
+        
+        # Sort by started_at (most recent first)
+        all_sessions.sort(key=lambda x: x.get("started_at", "") or "", reverse=True)
+        
+        # Paginate
+        paginated = all_sessions[offset:offset + limit]
+        
+        # Format for Mistake Autopsy
+        sessions = []
+        for session in paginated:
+            sessions.append({
+                "session_id": session.get("session_id"),
+                "topic": session.get("topic"),
+                "subject": "General Learning",
+                "difficulty_level": int(session.get("difficulty_level", 5)),
+                "status": session.get("status"),
+                "story_style": session.get("story_style", ""),
+                "visual_style": session.get("visual_style", "cartoon"),
+                "score": int(session.get("score", 0)),
+                "started_at": session.get("started_at"),
+                "completed_at": session.get("completed_at")
+            })
+        
+        return {"sessions": sessions}
+        
+    except Exception as e:
+        logger.error(f"Error loading sessions: {e}")
+        return {"sessions": []}
+
+
 @router.get("/history", status_code=status.HTTP_200_OK)
 async def get_session_history(
     current_user: dict = Depends(get_current_user),

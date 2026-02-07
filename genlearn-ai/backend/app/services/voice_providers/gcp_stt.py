@@ -1,15 +1,20 @@
 """
 Google Cloud Platform Speech-to-Text Provider Implementation
-Uses Application Default Credentials (ADC) for authentication
+Uses Service Account credentials or Application Default Credentials (ADC) for authentication
 """
 
 import os
 import httpx
 import base64
 from typing import Optional
+from google.oauth2 import service_account
 from google.auth import default
 from google.auth.transport.requests import Request
 from .base import BaseSTTProvider
+
+
+# Scopes required for Cloud Speech-to-Text API
+CLOUD_STT_SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
 
 
 class GCPSTTProvider(BaseSTTProvider):
@@ -19,9 +24,20 @@ class GCPSTTProvider(BaseSTTProvider):
         self.project_id = os.getenv("GCP_PROJECT_ID", "gen-lang-client-0639252091")
         self.base_url = "https://speech.googleapis.com/v1"
         
-        # Get credentials using ADC
+        # Get credentials - prefer service account file if specified
+        credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "")
+        
         try:
-            self.credentials, project = default()
+            if credentials_path and os.path.exists(credentials_path):
+                # Load from service account JSON file with proper scopes
+                self.credentials = service_account.Credentials.from_service_account_file(
+                    credentials_path,
+                    scopes=CLOUD_STT_SCOPES
+                )
+            else:
+                # Fall back to Application Default Credentials
+                self.credentials, project = default(scopes=CLOUD_STT_SCOPES)
+            
             if not self.credentials.valid:
                 self.credentials.refresh(Request())
         except Exception as e:

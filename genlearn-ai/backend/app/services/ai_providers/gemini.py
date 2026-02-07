@@ -332,11 +332,10 @@ Evaluate fairly and respond with ONLY this JSON (no markdown, no code blocks):
         context: Optional[str] = None,
         language: str = "en"
     ) -> str:
-        """General chat capability."""
+        """General chat capability with multi-language support."""
+        from app.utils.languages import get_language_instruction
 
-        language_instruction = ""
-        if language != "en":
-            language_instruction = f"Respond in the language with code: {language}. "
+        language_instruction = get_language_instruction(language)
 
         system_instruction = f"""You are a helpful AI learning assistant.
         {language_instruction}

@@ -165,52 +165,36 @@ export const FeynmanEnginePage: React.FC = () => {
     const [lectureInput, setLectureInput] = useState('');
     const [personaFeedback, setPersonaFeedback] = useState<PersonaFeedback[]>([]);
 
-    // Session History state
+    // Session History state - SAFE: Click-to-load, no useEffect
+    const [showHistory, setShowHistory] = useState(false);
     const [sessionHistory, setSessionHistory] = useState<any[]>([]);
     const [historyLoading, setHistoryLoading] = useState(false);
-    const [historyPage, setHistoryPage] = useState(1);
-    const [hasMoreHistory, setHasMoreHistory] = useState(true);
-    const HISTORY_PAGE_SIZE = 6;
+    const [historyError, setHistoryError] = useState<string | null>(null);
 
     const chatEndRef = useRef<HTMLDivElement>(null);
 
-    // Load session history - DEFINED BEFORE useEffect that calls it
+    // Toggle history section - loads data on first open
+    const toggleHistory = () => {
+        if (!showHistory && sessionHistory.length === 0 && !historyLoading) {
+            loadSessionHistory();
+        }
+        setShowHistory(!showHistory);
+    };
+
+    // Load session history - ONLY called when user clicks
     const loadSessionHistory = async () => {
         setHistoryLoading(true);
+        setHistoryError(null);
         try {
-            const response = await api.client.get(`/feynman/sessions/user/guest?limit=${HISTORY_PAGE_SIZE}`);
-            const sessions = response.data.sessions || [];
-            setSessionHistory(sessions.slice(0, HISTORY_PAGE_SIZE));
-            setHasMoreHistory(sessions.length > HISTORY_PAGE_SIZE);
+            const response = await api.client.get('/feynman/sessions/user/guest?limit=10');
+            setSessionHistory(response.data.sessions || []);
         } catch (err) {
             console.error('Failed to load session history:', err);
-            // Don't block the page - just don't show history
+            setHistoryError('Failed to load sessions. Click to retry.');
         } finally {
             setHistoryLoading(false);
         }
     };
-
-    // Load more sessions
-    const loadMoreSessions = async () => {
-        const currentCount = sessionHistory.length;
-        setHistoryLoading(true);
-        try {
-            const response = await api.client.get(`/feynman/sessions/user/guest?limit=${currentCount + HISTORY_PAGE_SIZE}`);
-            const sessions = response.data.sessions || [];
-            setSessionHistory(sessions);
-            setHasMoreHistory(sessions.length > currentCount + HISTORY_PAGE_SIZE);
-        } catch (err) {
-            console.error('Failed to load more sessions:', err);
-        } finally {
-            setHistoryLoading(false);
-        }
-    };
-
-    // Fetch session history on mount - DISABLED temporarily
-    // useEffect(() => {
-    //     loadSessionHistory();
-    //     // eslint-disable-next-line react-hooks/exhaustive-deps
-    // }, []);
 
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -685,430 +669,436 @@ export const FeynmanEnginePage: React.FC = () => {
                     </button>
                 </div>
 
-                {/* Session History Section */}
-                {sessionHistory.length > 0 && (
-                    <div className="bg-white rounded-xl p-6 shadow-lg">
-                        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            📚 Recent Sessions
-                            {historyLoading && <span className="text-sm font-normal text-gray-500">Loading...</span>}
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                            {sessionHistory.map((s, idx) => (
-                                <button
-                                    key={s.id || idx}
-                                    onClick={() => resumeSession(s)}
-                                    className="p-4 rounded-lg border-2 border-gray-200 hover:border-indigo-400 hover:bg-indigo-50 text-left transition-all group"
-                                >
-                                    <div className="flex items-start justify-between mb-2">
-                                        <span className="text-xs px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full">{s.subject || 'General'}</span>
-                                        <span className={`text-xs px-2 py-0.5 rounded-full ${s.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                                            {s.status === 'completed' ? '✅ Done' : '🔄 In Progress'}
-                                        </span>
-                                    </div>
-                                    <h4 className="font-semibold text-gray-800 group-hover:text-indigo-700 mb-1 line-clamp-2">{s.topic}</h4>
-                                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                                        <span>Layer {s.current_layer || 1}</span>
-                                        <span>•</span>
-                                        <span>{new Date(s.started_at).toLocaleDateString()}</span>
-                                    </div>
-                                </button>
-                            ))}
+                {/* Session History Section - Collapsible */}
+                <div className="bg-white rounded-xl p-4 shadow-lg">
+                    <button
+                        onClick={toggleHistory}
+                        className="w-full flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition-all"
+                    >
+                        <span className="text-lg font-semibold text-gray-700">
+                            📚 Recent Teaching Sessions
+                        </span>
+                        <span className="text-gray-500 text-xl">
+                            {showHistory ? '▲' : '▼'}
+                        </span>
+                    </button>
+                    {showHistory && (
+                        <div className="mt-4">
+                            {historyLoading && <div className="text-center py-4 text-gray-500">⏳ Loading sessions...</div>}
+                            {historyError && <div className="text-center py-4 text-red-500">{historyError}</div>}
+                            {!historyLoading && !historyError && sessionHistory.length === 0 && (
+                                <div className="text-center py-4 text-gray-500">No previous sessions. Start your first teaching session!</div>
+                            )}
+                            {!historyLoading && sessionHistory.length > 0 && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {sessionHistory.map((s, idx) => (
+                                        <button
+                                            key={s.id || idx}
+                                            onClick={() => resumeSession(s)}
+                                            className="p-4 rounded-lg border-2 border-gray-200 hover:border-indigo-400 hover:bg-indigo-50 text-left transition-all group"
+                                        >
+                                            <div className="flex items-start justify-between mb-2">
+                                                <span className="text-xs px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full">{s.subject || 'General'}</span>
+                                                <span className={`text-xs px-2 py-0.5 rounded-full ${s.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                                    {s.status === 'completed' ? '✅ Done' : '🔄 In Progress'}
+                                                </span>
+                                            </div>
+                                            <h4 className="font-semibold text-gray-800 group-hover:text-indigo-700 mb-1 line-clamp-2">{s.topic}</h4>
+                                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                                                <span>Layer {s.current_layer || 1}</span>
+                                                <span>•</span>
+                                                <span>{new Date(s.started_at).toLocaleDateString()}</span>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
-
-                        {hasMoreHistory && (
-                            <button
-                                onClick={loadMoreSessions}
-                                disabled={historyLoading}
-                                className="mt-4 w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-indigo-400 hover:text-indigo-600 transition-all disabled:opacity-50"
-                            >
-                                {historyLoading ? 'Loading...' : '📖 Load More Sessions'}
-                            </button>
-                        )}
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         );
     }
 
-    // Render Learning Screen
-    return (
-        <div className="max-w-6xl mx-auto space-y-4">
-            {/* Header with Layer Navigation */}
-            <div className="bg-white rounded-xl p-4 shadow-lg">
-                <div className="flex items-center justify-between mb-4">
-                    <div>
-                        <h1 className="text-xl font-bold text-gray-900">🧠 {session?.topic}</h1>
-                        <p className="text-sm text-gray-500">{session?.subject}</p>
-                    </div>
-                    <button
-                        onClick={handleCompleteSession}
-                        className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                    >
-                        ✅ Complete Session
-                    </button>
-                </div>
-
-                {/* Layer Tabs */}
-                <div className="flex gap-2 overflow-x-auto pb-2">
-                    {layerNames.map(layer => (
-                        <button
-                            key={layer.id}
-                            onClick={() => handleChangeLayer(layer.id)}
-                            disabled={loading}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-all cursor-pointer ${currentLayer === layer.id
-                                ? `bg-gradient-to-r ${layer.color} text-white shadow-lg scale-105`
-                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:scale-102'
-                                } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                            <span>{layer.emoji}</span>
-                            <span className="font-medium">{layer.name}</span>
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {/* Layer Content */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-                {/* Main Chat Area */}
-                <div className="lg:col-span-3 bg-white rounded-xl shadow-lg overflow-hidden">
-                    {/* Layer 1: Ritty */}
-                    {currentLayer === 1 && (
-                        <>
-                            <div className={`bg-gradient-to-r ${layerNames[0].color} text-white p-4`}>
-                                <h2 className="font-bold">👦 Explain to Ritty</h2>
-                                <p className="text-sm opacity-80">An 8-year-old who wants to learn from you!</p>
+                // Render Learning Screen
+                return (
+                <div className="max-w-6xl mx-auto space-y-4">
+                    {/* Header with Layer Navigation */}
+                    <div className="bg-white rounded-xl p-4 shadow-lg">
+                        <div className="flex items-center justify-between mb-4">
+                            <div>
+                                <h1 className="text-xl font-bold text-gray-900">🧠 {session?.topic}</h1>
+                                <p className="text-sm text-gray-500">{session?.subject}</p>
                             </div>
-                            <div className="h-96 overflow-y-auto p-4 space-y-4">
-                                {rittyMessages.map((msg, idx) => (
-                                    <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                        <div className={`max-w-[80%] p-3 rounded-lg ${msg.role === 'user'
-                                            ? 'bg-amber-500 text-white'
-                                            : 'bg-amber-50 text-gray-800 border border-amber-200'
-                                            }`}>
-                                            <div dangerouslySetInnerHTML={{ __html: formatChatContent(msg.content) }} />
+                            <button
+                                onClick={handleCompleteSession}
+                                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                            >
+                                ✅ Complete Session
+                            </button>
+                        </div>
+
+                        {/* Layer Tabs */}
+                        <div className="flex gap-2 overflow-x-auto pb-2">
+                            {layerNames.map(layer => (
+                                <button
+                                    key={layer.id}
+                                    onClick={() => handleChangeLayer(layer.id)}
+                                    disabled={loading}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-all cursor-pointer ${currentLayer === layer.id
+                                        ? `bg-gradient-to-r ${layer.color} text-white shadow-lg scale-105`
+                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:scale-102'
+                                        } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                >
+                                    <span>{layer.emoji}</span>
+                                    <span className="font-medium">{layer.name}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Layer Content */}
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                        {/* Main Chat Area */}
+                        <div className="lg:col-span-3 bg-white rounded-xl shadow-lg overflow-hidden">
+                            {/* Layer 1: Ritty */}
+                            {currentLayer === 1 && (
+                                <>
+                                    <div className={`bg-gradient-to-r ${layerNames[0].color} text-white p-4`}>
+                                        <h2 className="font-bold">👦 Explain to Ritty</h2>
+                                        <p className="text-sm opacity-80">An 8-year-old who wants to learn from you!</p>
+                                    </div>
+                                    <div className="h-96 overflow-y-auto p-4 space-y-4">
+                                        {rittyMessages.map((msg, idx) => (
+                                            <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                                <div className={`max-w-[80%] p-3 rounded-lg ${msg.role === 'user'
+                                                    ? 'bg-amber-500 text-white'
+                                                    : 'bg-amber-50 text-gray-800 border border-amber-200'
+                                                    }`}>
+                                                    <div dangerouslySetInnerHTML={{ __html: formatChatContent(msg.content) }} />
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {loading && <div className="text-center text-gray-500">Ritty is thinking... 🤔</div>}
+                                        <div ref={chatEndRef} />
+                                    </div>
+                                    <div className="p-4 border-t flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={rittyInput}
+                                            onChange={(e) => setRittyInput(e.target.value)}
+                                            onKeyPress={(e) => e.key === 'Enter' && handleRittySend()}
+                                            placeholder="Explain to Ritty..."
+                                            className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                        />
+                                        <button
+                                            onClick={handleRittySend}
+                                            disabled={loading}
+                                            className="px-6 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-50"
+                                        >
+                                            Teach
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* Layer 2: Compression */}
+                            {currentLayer === 2 && (
+                                <>
+                                    <div className={`bg-gradient-to-r ${layerNames[1].color} text-white p-4`}>
+                                        <h2 className="font-bold">📝 Compression Challenge</h2>
+                                        <p className="text-sm opacity-80">Explain in {currentWordLimit} words or less!</p>
+                                    </div>
+                                    <div className="p-4 space-y-4">
+                                        <div className="flex gap-2 justify-center">
+                                            {[100, 50, 25, 15, 10, 1].map(limit => (
+                                                <div
+                                                    key={limit}
+                                                    className={`px-3 py-1 rounded-full text-sm ${currentWordLimit === limit
+                                                        ? 'bg-blue-500 text-white'
+                                                        : compressionHistory.some(h => h.limit === limit)
+                                                            ? 'bg-green-100 text-green-700'
+                                                            : 'bg-gray-100 text-gray-500'
+                                                        }`}
+                                                >
+                                                    {limit}
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {compressionHistory.map((h, idx) => (
+                                            <div key={idx} className="p-3 bg-gray-50 rounded-lg space-y-2">
+                                                <div className="flex justify-between text-sm text-gray-500">
+                                                    <span>{h.limit} words</span>
+                                                    <span>Score: {h.score}/5 {'⭐'.repeat(h.score)}</span>
+                                                </div>
+                                                <p className="text-gray-800 italic">"{h.text}"</p>
+                                                <div className="p-2 bg-blue-50 rounded border-l-4 border-blue-400">
+                                                    <p className="text-sm text-blue-800">{h.feedback}</p>
+                                                    {h.suggestion && (
+                                                        <p className="text-xs text-blue-600 mt-1">💡 {h.suggestion}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+
+                                        <div>
+                                            <textarea
+                                                value={compressionInput}
+                                                onChange={(e) => setCompressionInput(e.target.value)}
+                                                placeholder={`Explain ${session?.topic} in ${currentWordLimit} words or less...`}
+                                                className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 h-32"
+                                            />
+                                            <div className="flex justify-between items-center mt-2">
+                                                <span className={`text-sm ${compressionInput.split(/\s+/).filter(Boolean).length > currentWordLimit ? 'text-red-500' : 'text-gray-500'}`}>
+                                                    {compressionInput.split(/\s+/).filter(Boolean).length} / {currentWordLimit} words
+                                                </span>
+                                                <button
+                                                    onClick={handleCompressionSubmit}
+                                                    disabled={loading}
+                                                    className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+                                                >
+                                                    Submit
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-                                ))}
-                                {loading && <div className="text-center text-gray-500">Ritty is thinking... 🤔</div>}
-                                <div ref={chatEndRef} />
-                            </div>
-                            <div className="p-4 border-t flex gap-2">
-                                <input
-                                    type="text"
-                                    value={rittyInput}
-                                    onChange={(e) => setRittyInput(e.target.value)}
-                                    onKeyPress={(e) => e.key === 'Enter' && handleRittySend()}
-                                    placeholder="Explain to Ritty..."
-                                    className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                                />
-                                <button
-                                    onClick={handleRittySend}
-                                    disabled={loading}
-                                    className="px-6 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-50"
-                                >
-                                    Teach
-                                </button>
-                            </div>
-                        </>
-                    )}
+                                </>
+                            )}
 
-                    {/* Layer 2: Compression */}
-                    {currentLayer === 2 && (
-                        <>
-                            <div className={`bg-gradient-to-r ${layerNames[1].color} text-white p-4`}>
-                                <h2 className="font-bold">📝 Compression Challenge</h2>
-                                <p className="text-sm opacity-80">Explain in {currentWordLimit} words or less!</p>
-                            </div>
-                            <div className="p-4 space-y-4">
-                                <div className="flex gap-2 justify-center">
-                                    {[100, 50, 25, 15, 10, 1].map(limit => (
-                                        <div
-                                            key={limit}
-                                            className={`px-3 py-1 rounded-full text-sm ${currentWordLimit === limit
-                                                ? 'bg-blue-500 text-white'
-                                                : compressionHistory.some(h => h.limit === limit)
-                                                    ? 'bg-green-100 text-green-700'
-                                                    : 'bg-gray-100 text-gray-500'
-                                                }`}
+                            {/* Layer 3: Why Spiral */}
+                            {currentLayer === 3 && (
+                                <>
+                                    <div className={`bg-gradient-to-r ${layerNames[2].color} text-white p-4`}>
+                                        <h2 className="font-bold">🌀 Why Spiral - Depth {whyDepth}/5</h2>
+                                        <p className="text-sm opacity-80">Answer "why" until you reach your knowledge boundary</p>
+                                    </div>
+                                    <div className="h-96 overflow-y-auto p-4 space-y-4">
+                                        {whySpiralMessages.map((msg, idx) => (
+                                            <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                                <div className={`max-w-[80%] p-3 rounded-lg ${msg.role === 'user'
+                                                    ? 'bg-purple-500 text-white'
+                                                    : 'bg-purple-50 text-gray-800 border border-purple-200'
+                                                    }`}>
+                                                    <div dangerouslySetInnerHTML={{ __html: formatChatContent(msg.content) }} />
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {loading && <div className="text-center text-gray-500">Thinking of the next question... 🌀</div>}
+                                        <div ref={chatEndRef} />
+                                    </div>
+                                    <div className="p-4 border-t space-y-2">
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={whySpiralInput}
+                                                onChange={(e) => setWhySpiralInput(e.target.value)}
+                                                onKeyPress={(e) => e.key === 'Enter' && handleWhySpiralRespond(false)}
+                                                placeholder="Explain why..."
+                                                className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                                disabled={boundaryFound}
+                                            />
+                                            <button
+                                                onClick={() => handleWhySpiralRespond(false)}
+                                                disabled={loading || boundaryFound}
+                                                className="px-6 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:opacity-50"
+                                            >
+                                                Answer
+                                            </button>
+                                        </div>
+                                        <button
+                                            onClick={() => handleWhySpiralRespond(true)}
+                                            disabled={loading || boundaryFound}
+                                            className="text-sm text-purple-600 hover:underline"
                                         >
-                                            {limit}
+                                            🤷 I don't know (find my knowledge boundary)
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* Layer 4: Analogy */}
+                            {currentLayer === 4 && (
+                                <>
+                                    <div className={`bg-gradient-to-r ${layerNames[3].color} text-white p-4`}>
+                                        <h2 className="font-bold">🎨 Analogy Architect - {analogyPhase.toUpperCase()}</h2>
+                                        <p className="text-sm opacity-80">Create, defend, and refine your analogy</p>
+                                    </div>
+                                    <div className="p-4 space-y-4 h-[500px] overflow-y-auto">
+                                        {/* Show history with images when returning to layer */}
+                                        {analogyHistory.map((h, idx) => (
+                                            <div key={idx} className={`flex ${h.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                                <div className={`max-w-[85%] p-3 rounded-lg ${h.role === 'user'
+                                                    ? 'bg-green-500 text-white'
+                                                    : 'bg-gray-50 text-gray-800 border'
+                                                    }`}>
+                                                    <div dangerouslySetInnerHTML={{ __html: formatChatContent(h.content) }} />
+                                                    {h.image_url && (
+                                                        <div className="mt-3 border rounded-lg overflow-hidden">
+                                                            <div className="bg-green-100 px-2 py-1 text-xs text-green-800">
+                                                                🎨 Analogy Visualization
+                                                            </div>
+                                                            <img
+                                                                src={`http://localhost:8000${h.image_url}`}
+                                                                alt="Analogy visualization"
+                                                                className="w-full h-auto"
+                                                                onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+
+                                        {stressTestQuestion && analogyPhase === 'defend' && (
+                                            <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                                                <p className="font-medium text-orange-800">🔥 Stress Test:</p>
+                                                <p className="text-orange-700">{stressTestQuestion}</p>
+                                            </div>
+                                        )}
+
+                                        {loading && <div className="text-center text-gray-500">Generating feedback... 🎨</div>}
+                                        <div ref={chatEndRef} />
+
+                                        <textarea
+                                            value={analogyInput}
+                                            onChange={(e) => setAnalogyInput(e.target.value)}
+                                            placeholder={analogyPhase === 'create'
+                                                ? `Create an analogy for "${session?.topic}"...`
+                                                : analogyPhase === 'defend'
+                                                    ? 'Defend your analogy against the stress test...'
+                                                    : 'Refine your analogy based on the feedback...'
+                                            }
+                                            className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 h-32"
+                                        />
+                                        <button
+                                            onClick={handleAnalogySubmit}
+                                            disabled={loading}
+                                            className="w-full py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
+                                        >
+                                            {analogyPhase === 'create' ? '✨ Create Analogy' : analogyPhase === 'defend' ? '🛡️ Defend' : '🔄 Refine'}
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* Layer 5: Lecture Hall */}
+                            {currentLayer === 5 && (
+                                <>
+                                    <div className={`bg-gradient-to-r ${layerNames[4].color} text-white p-4`}>
+                                        <h2 className="font-bold">🎓 Lecture Hall</h2>
+                                        <p className="text-sm opacity-80">Satisfy all 5 personas!</p>
+                                    </div>
+                                    <div className="h-96 overflow-y-auto p-4 space-y-4">
+                                        {lectureMessages.map((msg, idx) => (
+                                            <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                                <div className={`max-w-[90%] p-3 rounded-lg ${msg.role === 'user'
+                                                    ? 'bg-red-500 text-white'
+                                                    : 'bg-gray-50 text-gray-800 border'
+                                                    }`}>
+                                                    <div dangerouslySetInnerHTML={{ __html: formatChatContent(msg.content) }} />
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {loading && <div className="text-center text-gray-500">Personas are evaluating... 🎓</div>}
+                                        <div ref={chatEndRef} />
+                                    </div>
+                                    <div className="p-4 border-t flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={lectureInput}
+                                            onChange={(e) => setLectureInput(e.target.value)}
+                                            onKeyPress={(e) => e.key === 'Enter' && handleLectureExplain()}
+                                            placeholder="Explain to the audience..."
+                                            className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                                        />
+                                        <button
+                                            onClick={handleLectureExplain}
+                                            disabled={loading}
+                                            className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50"
+                                        >
+                                            Explain
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Sidebar */}
+                        <div className="space-y-4">
+                            {/* Ritty Avatar (Layer 1) */}
+                            {currentLayer === 1 && (
+                                <div className="bg-white rounded-xl p-4 shadow-lg">
+                                    <RittyAvatar state={avatarState} confusion={confusionLevel} curiosity={curiosityLevel} />
+                                </div>
+                            )}
+
+                            {/* Persona Satisfaction (Layer 5) */}
+                            {currentLayer === 5 && personaFeedback.length > 0 && (
+                                <div className="bg-white rounded-xl p-4 shadow-lg space-y-3">
+                                    <h3 className="font-bold text-gray-800">Persona Satisfaction</h3>
+                                    {personaFeedback.map(p => (
+                                        <div key={p.persona} className="flex items-center gap-2">
+                                            <span className={`text-lg ${p.is_satisfied ? '' : 'opacity-50'}`}>
+                                                {p.is_satisfied ? '✅' : '❌'}
+                                            </span>
+                                            <div className="flex-1">
+                                                <div className="text-sm font-medium">{p.persona_name}</div>
+                                                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                                    <div
+                                                        className={`h-full transition-all ${p.satisfaction > 0.7 ? 'bg-green-500' : p.satisfaction > 0.4 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                                        style={{ width: `${p.satisfaction * 100}%` }}
+                                                    />
+                                                </div>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
+                            )}
 
-                                {compressionHistory.map((h, idx) => (
-                                    <div key={idx} className="p-3 bg-gray-50 rounded-lg space-y-2">
-                                        <div className="flex justify-between text-sm text-gray-500">
-                                            <span>{h.limit} words</span>
-                                            <span>Score: {h.score}/5 {'⭐'.repeat(h.score)}</span>
-                                        </div>
-                                        <p className="text-gray-800 italic">"{h.text}"</p>
-                                        <div className="p-2 bg-blue-50 rounded border-l-4 border-blue-400">
-                                            <p className="text-sm text-blue-800">{h.feedback}</p>
-                                            {h.suggestion && (
-                                                <p className="text-xs text-blue-600 mt-1">💡 {h.suggestion}</p>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-
-                                <div>
-                                    <textarea
-                                        value={compressionInput}
-                                        onChange={(e) => setCompressionInput(e.target.value)}
-                                        placeholder={`Explain ${session?.topic} in ${currentWordLimit} words or less...`}
-                                        className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 h-32"
-                                    />
-                                    <div className="flex justify-between items-center mt-2">
-                                        <span className={`text-sm ${compressionInput.split(/\s+/).filter(Boolean).length > currentWordLimit ? 'text-red-500' : 'text-gray-500'}`}>
-                                            {compressionInput.split(/\s+/).filter(Boolean).length} / {currentWordLimit} words
-                                        </span>
-                                        <button
-                                            onClick={handleCompressionSubmit}
-                                            disabled={loading}
-                                            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
-                                        >
-                                            Submit
-                                        </button>
-                                    </div>
-                                </div>
+                            {/* Tips */}
+                            <div className="bg-white rounded-xl p-4 shadow-lg">
+                                <h3 className="font-bold text-gray-800 mb-2">💡 Tips</h3>
+                                <ul className="text-sm text-gray-600 space-y-1">
+                                    {currentLayer === 1 && (
+                                        <>
+                                            <li>• Use simple words Ritty can understand</li>
+                                            <li>• Give examples from everyday life</li>
+                                            <li>• Watch the confusion meter!</li>
+                                        </>
+                                    )}
+                                    {currentLayer === 2 && (
+                                        <>
+                                            <li>• Focus on the core concept</li>
+                                            <li>• Remove unnecessary words</li>
+                                            <li>• Each round halves the limit!</li>
+                                        </>
+                                    )}
+                                    {currentLayer === 3 && (
+                                        <>
+                                            <li>• Think deeply about causation</li>
+                                            <li>• It's okay to say "I don't know"</li>
+                                            <li>• Finding gaps = learning opportunities!</li>
+                                        </>
+                                    )}
+                                    {currentLayer === 4 && (
+                                        <>
+                                            <li>• Good analogies are relatable</li>
+                                            <li>• Consider where it might break down</li>
+                                            <li>• Defend against stress tests!</li>
+                                        </>
+                                    )}
+                                    {currentLayer === 5 && (
+                                        <>
+                                            <li>• Balance depth with accessibility</li>
+                                            <li>• Include practical examples</li>
+                                            <li>• Satisfy ALL personas!</li>
+                                        </>
+                                    )}
+                                </ul>
                             </div>
-                        </>
-                    )}
-
-                    {/* Layer 3: Why Spiral */}
-                    {currentLayer === 3 && (
-                        <>
-                            <div className={`bg-gradient-to-r ${layerNames[2].color} text-white p-4`}>
-                                <h2 className="font-bold">🌀 Why Spiral - Depth {whyDepth}/5</h2>
-                                <p className="text-sm opacity-80">Answer "why" until you reach your knowledge boundary</p>
-                            </div>
-                            <div className="h-96 overflow-y-auto p-4 space-y-4">
-                                {whySpiralMessages.map((msg, idx) => (
-                                    <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                        <div className={`max-w-[80%] p-3 rounded-lg ${msg.role === 'user'
-                                            ? 'bg-purple-500 text-white'
-                                            : 'bg-purple-50 text-gray-800 border border-purple-200'
-                                            }`}>
-                                            <div dangerouslySetInnerHTML={{ __html: formatChatContent(msg.content) }} />
-                                        </div>
-                                    </div>
-                                ))}
-                                {loading && <div className="text-center text-gray-500">Thinking of the next question... 🌀</div>}
-                                <div ref={chatEndRef} />
-                            </div>
-                            <div className="p-4 border-t space-y-2">
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        value={whySpiralInput}
-                                        onChange={(e) => setWhySpiralInput(e.target.value)}
-                                        onKeyPress={(e) => e.key === 'Enter' && handleWhySpiralRespond(false)}
-                                        placeholder="Explain why..."
-                                        className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                        disabled={boundaryFound}
-                                    />
-                                    <button
-                                        onClick={() => handleWhySpiralRespond(false)}
-                                        disabled={loading || boundaryFound}
-                                        className="px-6 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:opacity-50"
-                                    >
-                                        Answer
-                                    </button>
-                                </div>
-                                <button
-                                    onClick={() => handleWhySpiralRespond(true)}
-                                    disabled={loading || boundaryFound}
-                                    className="text-sm text-purple-600 hover:underline"
-                                >
-                                    🤷 I don't know (find my knowledge boundary)
-                                </button>
-                            </div>
-                        </>
-                    )}
-
-                    {/* Layer 4: Analogy */}
-                    {currentLayer === 4 && (
-                        <>
-                            <div className={`bg-gradient-to-r ${layerNames[3].color} text-white p-4`}>
-                                <h2 className="font-bold">🎨 Analogy Architect - {analogyPhase.toUpperCase()}</h2>
-                                <p className="text-sm opacity-80">Create, defend, and refine your analogy</p>
-                            </div>
-                            <div className="p-4 space-y-4 h-[500px] overflow-y-auto">
-                                {/* Show history with images when returning to layer */}
-                                {analogyHistory.map((h, idx) => (
-                                    <div key={idx} className={`flex ${h.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                        <div className={`max-w-[85%] p-3 rounded-lg ${h.role === 'user'
-                                            ? 'bg-green-500 text-white'
-                                            : 'bg-gray-50 text-gray-800 border'
-                                            }`}>
-                                            <div dangerouslySetInnerHTML={{ __html: formatChatContent(h.content) }} />
-                                            {h.image_url && (
-                                                <div className="mt-3 border rounded-lg overflow-hidden">
-                                                    <div className="bg-green-100 px-2 py-1 text-xs text-green-800">
-                                                        🎨 Analogy Visualization
-                                                    </div>
-                                                    <img
-                                                        src={`http://localhost:8000${h.image_url}`}
-                                                        alt="Analogy visualization"
-                                                        className="w-full h-auto"
-                                                        onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
-                                                    />
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-
-                                {stressTestQuestion && analogyPhase === 'defend' && (
-                                    <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                                        <p className="font-medium text-orange-800">🔥 Stress Test:</p>
-                                        <p className="text-orange-700">{stressTestQuestion}</p>
-                                    </div>
-                                )}
-
-                                {loading && <div className="text-center text-gray-500">Generating feedback... 🎨</div>}
-                                <div ref={chatEndRef} />
-
-                                <textarea
-                                    value={analogyInput}
-                                    onChange={(e) => setAnalogyInput(e.target.value)}
-                                    placeholder={analogyPhase === 'create'
-                                        ? `Create an analogy for "${session?.topic}"...`
-                                        : analogyPhase === 'defend'
-                                            ? 'Defend your analogy against the stress test...'
-                                            : 'Refine your analogy based on the feedback...'
-                                    }
-                                    className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 h-32"
-                                />
-                                <button
-                                    onClick={handleAnalogySubmit}
-                                    disabled={loading}
-                                    className="w-full py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
-                                >
-                                    {analogyPhase === 'create' ? '✨ Create Analogy' : analogyPhase === 'defend' ? '🛡️ Defend' : '🔄 Refine'}
-                                </button>
-                            </div>
-                        </>
-                    )}
-
-                    {/* Layer 5: Lecture Hall */}
-                    {currentLayer === 5 && (
-                        <>
-                            <div className={`bg-gradient-to-r ${layerNames[4].color} text-white p-4`}>
-                                <h2 className="font-bold">🎓 Lecture Hall</h2>
-                                <p className="text-sm opacity-80">Satisfy all 5 personas!</p>
-                            </div>
-                            <div className="h-96 overflow-y-auto p-4 space-y-4">
-                                {lectureMessages.map((msg, idx) => (
-                                    <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                        <div className={`max-w-[90%] p-3 rounded-lg ${msg.role === 'user'
-                                            ? 'bg-red-500 text-white'
-                                            : 'bg-gray-50 text-gray-800 border'
-                                            }`}>
-                                            <div dangerouslySetInnerHTML={{ __html: formatChatContent(msg.content) }} />
-                                        </div>
-                                    </div>
-                                ))}
-                                {loading && <div className="text-center text-gray-500">Personas are evaluating... 🎓</div>}
-                                <div ref={chatEndRef} />
-                            </div>
-                            <div className="p-4 border-t flex gap-2">
-                                <input
-                                    type="text"
-                                    value={lectureInput}
-                                    onChange={(e) => setLectureInput(e.target.value)}
-                                    onKeyPress={(e) => e.key === 'Enter' && handleLectureExplain()}
-                                    placeholder="Explain to the audience..."
-                                    className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                                />
-                                <button
-                                    onClick={handleLectureExplain}
-                                    disabled={loading}
-                                    className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50"
-                                >
-                                    Explain
-                                </button>
-                            </div>
-                        </>
-                    )}
-                </div>
-
-                {/* Sidebar */}
-                <div className="space-y-4">
-                    {/* Ritty Avatar (Layer 1) */}
-                    {currentLayer === 1 && (
-                        <div className="bg-white rounded-xl p-4 shadow-lg">
-                            <RittyAvatar state={avatarState} confusion={confusionLevel} curiosity={curiosityLevel} />
                         </div>
-                    )}
-
-                    {/* Persona Satisfaction (Layer 5) */}
-                    {currentLayer === 5 && personaFeedback.length > 0 && (
-                        <div className="bg-white rounded-xl p-4 shadow-lg space-y-3">
-                            <h3 className="font-bold text-gray-800">Persona Satisfaction</h3>
-                            {personaFeedback.map(p => (
-                                <div key={p.persona} className="flex items-center gap-2">
-                                    <span className={`text-lg ${p.is_satisfied ? '' : 'opacity-50'}`}>
-                                        {p.is_satisfied ? '✅' : '❌'}
-                                    </span>
-                                    <div className="flex-1">
-                                        <div className="text-sm font-medium">{p.persona_name}</div>
-                                        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                            <div
-                                                className={`h-full transition-all ${p.satisfaction > 0.7 ? 'bg-green-500' : p.satisfaction > 0.4 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                                                style={{ width: `${p.satisfaction * 100}%` }}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* Tips */}
-                    <div className="bg-white rounded-xl p-4 shadow-lg">
-                        <h3 className="font-bold text-gray-800 mb-2">💡 Tips</h3>
-                        <ul className="text-sm text-gray-600 space-y-1">
-                            {currentLayer === 1 && (
-                                <>
-                                    <li>• Use simple words Ritty can understand</li>
-                                    <li>• Give examples from everyday life</li>
-                                    <li>• Watch the confusion meter!</li>
-                                </>
-                            )}
-                            {currentLayer === 2 && (
-                                <>
-                                    <li>• Focus on the core concept</li>
-                                    <li>• Remove unnecessary words</li>
-                                    <li>• Each round halves the limit!</li>
-                                </>
-                            )}
-                            {currentLayer === 3 && (
-                                <>
-                                    <li>• Think deeply about causation</li>
-                                    <li>• It's okay to say "I don't know"</li>
-                                    <li>• Finding gaps = learning opportunities!</li>
-                                </>
-                            )}
-                            {currentLayer === 4 && (
-                                <>
-                                    <li>• Good analogies are relatable</li>
-                                    <li>• Consider where it might break down</li>
-                                    <li>• Defend against stress tests!</li>
-                                </>
-                            )}
-                            {currentLayer === 5 && (
-                                <>
-                                    <li>• Balance depth with accessibility</li>
-                                    <li>• Include practical examples</li>
-                                    <li>• Satisfy ALL personas!</li>
-                                </>
-                            )}
-                        </ul>
                     </div>
                 </div>
-            </div>
-        </div>
-    );
+                );
 };

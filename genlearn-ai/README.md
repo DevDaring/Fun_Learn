@@ -179,6 +179,28 @@ The MCT feature uses a 5-phase Socratic diagnostic approach:
 
 MCT tracks the "cascade path" showing how one misconception leads to multiple errors, enabling targeted learning repair.
 
+##### ✨ New MCT Features (v2.1)
+
+| Feature | Description |
+|---------|-------------|
+| **📜 MCT History Column** | Fourth column in "Load from Previous Sessions" shows past MCT analyses. Click to instantly resume any session! |
+| **💬 Chat-Based Analysis** | Load Feynman sessions and analyze the actual conversation for misconceptions. AI extracts user explanations and identifies errors from the full context. |
+| **🎨 Spaced Image Generation** | Educational images appear at turns 1, 2, 4, 7, 11, 16... with increasing intervals. Visual metaphors and diagrams enhance understanding. |
+| **💾 Conversation Persistence** | All MCT chats are saved. Resume sessions with full conversation history including images! |
+
+##### Image Generation Prompts (cycles through these):
+1. "Educational diagram showing {topic}, cartoon style"
+2. "Visual metaphor explaining {topic} using everyday objects"
+3. "Step-by-step visual showing how {topic} works"
+4. "Comparison diagram showing correct vs incorrect understanding"
+5. "Fun illustrated example of {topic} in real life"
+
+##### Technical Implementation:
+- **Backend**: `GET /features/mct/sessions/user/{user_id}` - Fetch session history
+- **Backend**: `GET /features/mct/conversation/{session_id}` - Load full conversation with images
+- **Storage**: `mct_sessions.csv` for sessions, `mct_conversations.csv` for messages
+- **Images**: Saved to `data/mct_images/` and served via `/data` static mount
+
 ---
 
 ### 📚 Core Learning Features
@@ -266,6 +288,10 @@ The application uses CSV files for data storage:
 - **avatars.csv** - User avatars
 - **characters.csv** - Custom characters
 - **learning_history.csv** - Learning activity history
+- **feynman_sessions.csv** - Feynman Engine teaching sessions
+- **feynman_conversations.csv** - Full conversation history for each Feynman layer
+- **mct_sessions.csv** - MCT diagnostic sessions (NEW!)
+- **mct_conversations.csv** - MCT chat history with image paths (NEW!)
 
 ## 🎨 Frontend Technology Stack
 
@@ -410,5 +436,17 @@ For issues or questions, please refer to:
 
 **Made with ❤️ for adaptive learning**
 
-Last Updated: January 2026
-Version: 2.0.0 - Enhanced Learning Experience
+Last Updated: January 24, 2026
+Version: 2.1.0 - MCT Session History & Spaced Image Generation
+
+Supported Languages:
+Mandarin Chinese	
+Spanish
+English	
+Hindi	
+Portuguese	
+Bengali	
+Russian	
+Japanese	
+Punjabi	
+Vietnamese

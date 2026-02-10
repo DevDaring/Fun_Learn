@@ -1,29 +1,22 @@
 """
-Provider Factory - SINGLE POINT OF CONFIGURATION FOR ALL API PROVIDERS
+Provider Factory - GEMINI 3 POWERED AI PROVIDERS
 
-To switch providers, change the corresponding environment variable:
-- AI_PROVIDER: gemini, openai, anthropic
-- IMAGE_PROVIDER: fibo, stability
-- VOICE_TTS_PROVIDER: gcp, azure, none (none = disable voice features)
-- VOICE_STT_PROVIDER: gcp, azure, none (none = disable voice features)
-
-No other code changes required!
+For Gemini 3 Hackathon - 100% Gemini-powered features:
+- AI_PROVIDER: gemini (Gemini 3)
+- IMAGE_PROVIDER: gemini (Imagen 3)
+- VOICE_TTS_PROVIDER: gcp (Google Cloud TTS)
+- VOICE_STT_PROVIDER: gcp (Google Cloud STT)
 """
 
 import os
 from typing import Optional
 from app.services.ai_providers.base import BaseAIProvider
 from app.services.ai_providers.gemini import GeminiProvider
-from app.services.ai_providers.openai import OpenAIProvider
-from app.services.ai_providers.anthropic import AnthropicProvider
 from app.services.image_providers.base import BaseImageProvider
-from app.services.image_providers.fibo import FiboProvider
-from app.services.image_providers.stability import StabilityProvider
 from app.services.image_providers.gemini_imagen import GeminiImagenProvider
 from app.services.voice_providers.base import BaseTTSProvider, BaseSTTProvider
 from app.services.voice_providers.gcp_tts import GCPTTSProvider
 from app.services.voice_providers.gcp_stt import GCPSTTProvider
-from app.services.voice_providers.azure_voice import AzureTTSProvider, AzureSTTProvider
 from app.services.voice_providers.none_provider import NoneTTSProvider, NoneSTTProvider
 
 

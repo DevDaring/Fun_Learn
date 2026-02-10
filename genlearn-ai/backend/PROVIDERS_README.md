@@ -51,7 +51,7 @@ Base interface defining:
 
 #### `ai_providers/gemini.py`
 Full implementation of Google Gemini provider:
-- Uses Gemini 2.0 Flash model by default
+- Uses Gemini 3 Pro Preview model by default
 - Async API calls with proper error handling
 - JSON response parsing with cleanup for markdown artifacts
 - System instructions for consistent output
@@ -262,7 +262,7 @@ status = await ProviderFactory.check_all_providers()
 ### For Gemini (Primary AI)
 ```env
 GEMINI_API_KEY=your_gemini_api_key
-GEMINI_MODEL=gemini-2.0-flash
+GEMINI_MODEL=gemini-3-pro-preview
 ```
 
 ### For OpenAI (Fallback AI)

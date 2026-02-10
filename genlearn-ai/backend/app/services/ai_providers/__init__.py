@@ -12,8 +12,6 @@ from .base import (
     AnswerEvaluationRequest
 )
 from .gemini import GeminiProvider
-from .openai import OpenAIProvider
-from .anthropic import AnthropicProvider
 
 __all__ = [
     "BaseAIProvider",
@@ -21,6 +19,4 @@ __all__ = [
     "QuestionGenerationRequest",
     "AnswerEvaluationRequest",
     "GeminiProvider",
-    "OpenAIProvider",
-    "AnthropicProvider",
 ]

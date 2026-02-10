@@ -46,8 +46,6 @@ class ProviderFactory:
 
     _ai_providers = {
         "gemini": GeminiProvider,
-        "openai": OpenAIProvider,
-        "anthropic": AnthropicProvider,
     }
 
     @classmethod
@@ -78,8 +76,6 @@ class ProviderFactory:
     # ============================================================
 
     _image_providers = {
-        "fibo": FiboProvider,
-        "stability": StabilityProvider,
         "gemini": GeminiImagenProvider,
         "imagen": GeminiImagenProvider,
     }
@@ -96,7 +92,7 @@ class ProviderFactory:
         Returns:
             Configured Image provider instance
         """
-        name = provider_name or os.getenv("IMAGE_PROVIDER", "fibo")
+        name = provider_name or os.getenv("IMAGE_PROVIDER", "gemini")
         provider_class = cls._image_providers.get(name.lower())
 
         if not provider_class:
@@ -113,7 +109,6 @@ class ProviderFactory:
 
     _tts_providers = {
         "gcp": GCPTTSProvider,
-        "azure": AzureTTSProvider,
         "none": NoneTTSProvider,
     }
 
@@ -146,7 +141,6 @@ class ProviderFactory:
 
     _stt_providers = {
         "gcp": GCPSTTProvider,
-        "azure": AzureSTTProvider,
         "none": NoneSTTProvider,
     }
 

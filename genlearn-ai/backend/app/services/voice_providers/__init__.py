@@ -11,13 +11,10 @@ from .base import (
 )
 from .gcp_tts import GCPTTSProvider
 from .gcp_stt import GCPSTTProvider
-from .azure_voice import AzureTTSProvider, AzureSTTProvider
 
 __all__ = [
     "BaseTTSProvider",
     "BaseSTTProvider",
     "GCPTTSProvider",
     "GCPSTTProvider",
-    "AzureTTSProvider",
-    "AzureSTTProvider",
 ]

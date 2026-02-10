@@ -66,25 +66,16 @@ class Settings(BaseSettings):
 
     # API Keys - Gemini
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
-    GEMINI_IMAGE_MODEL: str = os.getenv("GEMINI_IMAGE_MODEL", "imagen-3.0-generate-002")
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3-pro-preview")
+    GEMINI_IMAGE_MODEL: str = os.getenv("GEMINI_IMAGE_MODEL", "gemini-3-pro-image-preview")
 
-    # API Keys - GCP
+    # API Keys - GCP (for Voice Services)
     GCP_PROJECT_ID: str = os.getenv("GCP_PROJECT_ID", "")
     GCP_STT_API_KEY: str = os.getenv("GCP_STT_API_KEY", "")
     GCP_TTS_API_KEY: str = os.getenv("GCP_TTS_API_KEY", "")
 
-    # API Keys - FIBO
-    FIBO_API_KEY: str = os.getenv("FIBO_API_KEY", "")
-    FIBO_API_ENDPOINT: str = os.getenv("FIBO_API_ENDPOINT", "https://api.fibo.ai/v1")
-
     # Application API Key for client authentication
     APP_API_KEY: str = os.getenv("APP_API_KEY", "kd_dreaming007")
-
-    # Fallback API Keys
-    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
-    ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")
-    STABILITY_API_KEY: str = os.getenv("STABILITY_API_KEY", "")
 
     # File Paths
     BASE_DIR: Path = Path(__file__).parent.parent

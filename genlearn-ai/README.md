@@ -6,7 +6,7 @@
 
 *Where AI Becomes Your Student, Not Your Teacher*
 
-[![Gemini](https://img.shields.io/badge/Powered%20by-Gemini%202.0-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
+[![Gemini](https://img.shields.io/badge/Powered%20by-Gemini%203-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
 [![React](https://img.shields.io/badge/React-18.3-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.2-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -156,10 +156,10 @@ Fun Learn speaks **9 languages** natively:
 Switch between AI providers **without code changes**:
 
 ```env
-AI_PROVIDER=gemini          # or: openai, anthropic
-IMAGE_PROVIDER=gemini       # or: stability, fibo
-VOICE_TTS_PROVIDER=gcp      # or: azure
-VOICE_STT_PROVIDER=gcp      # or: azure
+AI_PROVIDER=gemini          # Gemini 3 for AI
+IMAGE_PROVIDER=gemini       # Imagen 3 for Images
+VOICE_TTS_PROVIDER=gcp      # Google Cloud TTS
+VOICE_STT_PROVIDER=gcp      # Google Cloud STT
 ```
 
 ### Technology Stack
@@ -168,7 +168,7 @@ VOICE_STT_PROVIDER=gcp      # or: azure
 |-------|-------------|
 | **Frontend** | React 18, TypeScript, Tailwind CSS, Vite, Zustand |
 | **Backend** | FastAPI, Python 3.11+, Pydantic, httpx (async) |
-| **AI** | Gemini 2.0 Flash (text), Imagen 3 (images) |
+| **AI** | Gemini 3 Pro Preview (text), Imagen 3 (images) |
 | **Voice** | Google Cloud TTS/STT |
 | **Data** | CSV files (pandas), local filesystem |
 | **Auth** | JWT + bcrypt |
@@ -245,7 +245,27 @@ GOOGLE_APPLICATION_CREDENTIALS=path/to/service-account.json
 
 ---
 
-## 📊 Data Storage
+## � Security Notice
+
+**⚠️ This repository is submitted for the Gemini 3 Hackathon.**
+
+**DO NOT use production API keys from this repository.** All API keys shown are examples only.
+
+**To run this project:**
+1. Get your own [Gemini API key](https://ai.google.dev/)
+2. Set up your own [Google Cloud project](https://cloud.google.com/) for voice services
+3. Copy `.env.example` to `.env` and add your own credentials
+4. Never commit your `.env` file or share your real API keys
+
+**Protected files (not included in repository):**
+- Production `.env` files with real API keys
+- Service account JSON files (`secrets/` folder)
+- User data and generated media files
+- Deployment scripts with project-specific configurations
+
+---
+
+## �📊 Data Storage
 
 | CSV File | Purpose |
 |----------|---------|

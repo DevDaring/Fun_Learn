@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI):
     print("🚀 Starting Fun Learn...")
     print("=" * 60)
     print(f"📦 AI Provider: {os.getenv('AI_PROVIDER', 'gemini')}")
-    print(f"🖼️  Image Provider: {os.getenv('IMAGE_PROVIDER', 'fibo')}")
+    print(f"🖼️  Image Provider: {os.getenv('IMAGE_PROVIDER', 'gemini')}")
     print(f"🔊 TTS Provider: {os.getenv('VOICE_TTS_PROVIDER', 'gcp')}")
     print(f"🎤 STT Provider: {os.getenv('VOICE_STT_PROVIDER', 'gcp')}")
     print("-" * 60)
@@ -156,3 +156,5 @@ async def health_check():
             "error": str(e),
             "version": "1.0.0-prototype"
         }
+
+

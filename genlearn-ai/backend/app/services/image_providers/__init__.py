@@ -9,12 +9,10 @@ from .base import (
     BaseImageProvider,
     ImageGenerationRequest
 )
-from .fibo import FiboProvider
-from .stability import StabilityProvider
+from .gemini_imagen import GeminiImagenProvider
 
 __all__ = [
     "BaseImageProvider",
     "ImageGenerationRequest",
-    "FiboProvider",
-    "StabilityProvider",
+    "GeminiImagenProvider",
 ]
